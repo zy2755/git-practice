@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">	<!--让手机按设备宽度渲染，响应式的前提-->
+	<title>小睦聚合</title>
+	<link rel="stylesheet" href="template">
+	<style>
+		/* style 块里是 CSS 世界，注释要用这种斜杠星号写法 */
+
+		header {
+			text-align: center;		/* 水平居中 */
+			font-size: 2.5em;		/* 设置字号大小 */
+			font-weight: bold;		/* 文字加粗 */
+		}
+		h1 {
+			color: #ffd700;
+			text-align: center;
+			grid-column: 1 / -1;	/* 让h1横跨所有列，独占一整行 */
+		}
+		h2, h3, h4 {
+			color: #d8c8f0;
+		}
+		html {
+			scroll-behavior: smooth;	/* 点击菜单跳转时平滑滚动，不"咻"地闪过去 */
+		}
+		nav {
+			position: sticky;			/* 粘在屏幕顶部，页面滚动时菜单不跑掉 */
+			top: 0;
+			display: flex;				/* 让菜单项横向排成一行 */
+			justify-content: center;	/* 整行居中 */
+			flex-wrap: wrap;			/* 屏幕太窄时自动换行 */
+			gap: 8px;
+			padding: 10px 16px;
+			background: rgba(35, 41, 70, 0.92);	/* 半透明深蓝紫底 */
+			backdrop-filter: blur(8px);			/* 毛玻璃效果 */
+			border-bottom: 1px solid rgba(255,255,255,0.08);
+			z-index: 10;				/* 浮在内容上面 */
+		}
+		nav a {
+			text-decoration: none;		/* 去掉链接默认下划线 */
+			padding: 6px 14px;
+			border-radius: 6px;
+			font-size: 0.95em;
+		}
+		nav a:hover {
+			background: rgba(255, 255, 255, 0.12);	/* 悬停时有个底色反馈 */
+		}
+		a {
+			color: #9ec9f5;
+		}
+		a:hover {
+			color: #c4e0ff;		/* 伪类：鼠标悬停时链接变色 */
+		}
+		body {
+			background-color: #232946;		/* 纯色背景：深蓝紫，想换颜色改这里 */
+			color: #fff;					/* 默认白字 */
+			font-family: Helvetica, sans-serif;
+			margin: 0;
+		}
+		main {
+			display: grid;					/* 开启网格布局 */
+			grid-template-columns: repeat(3, 1fr);	/* 三列，每列等宽 */
+			gap: 24px;						/* 列与列之间的间距 */
+			padding: 0 24px;
+			align-items: start;				/* 各列顶对齐，高度互不拉伸 */
+		}
+		.col {
+			background: rgba(0, 0, 0, 0.35);	/* 半透明黑底，让三列像三张卡片 */
+			border-radius: 10px;			/* 圆角 */
+			padding: 16px 20px;
+		}
+
+		/* 媒体查询：屏幕宽度小于600px（手机）时，改成单列布局 */
+		@media (max-width: 600px) {
+			main {
+				grid-template-columns: 1fr;	/* 只有一列 */
+				padding: 0 12px;			/* 间距也缩小一点 */
+			}
+			header {
+				font-size: 1.8em;			/* 手机上标题缩小，不占屏 */
+			}
+			nav a {
+				padding: 4px 10px;
+				font-size: 0.85em;
+			}
+		}
+	</style>
+</head>
+<body>
+	<nav>	<!--顶部导航菜单：点击跳到对应模块-->
+		<a href="#top">首页</a>
+		<a href="#links">一些小链接</a>
+		<a href="#dash">仪表盘</a>
+		<a href="#notes">一些碎碎念</a>
+		<a href="#more">更多</a>
+	</nav>
+	<header id="top">小睦巨献</header>	<!--HTML语义头部标签-->
+	<main>
+		<h1>Hello, World!</h1>
+
+		<div class="col" id="links">
+			<h2>一些小链接</h2>
+			<p>欢迎参观<a href="https://space.bilibili.com/454697722?spm_id_from=333.1007.0.0" target="_blank">小睦的B站首页</a></p>
+			<p>这里是国内可用的<a href="https://fankuhub.com/" target="_blank">动漫查询库</a></p>
+		</div>
+
+		<div class="col" id="dash">
+			<h2>仪表盘</h2>
+			<p>这里是<a href="https://platform.deepseek.com/usage" target="_blank">DeepSeek开放平台</a></p>
+			<p>这里是<a href="https://console.volcengine.com/ark/region:cn-beijing/subscription/coding-plan" target="_blank">火山方舟</a></p>
+			<p>这里是<a href="https://console.bce.baidu.com/ai-engine/speech/overview/index" target="_blank">百度智能云</a></p>
+			<p>芜湖<a href="https://cloud.xn--4gq62f52gdss.asia/" target="_blank">起飞</a></p>
+		</div>
+
+		<div class="col" id="notes">
+			<h2>一些碎碎念</h2>
+			<p>这是由我编辑的网页，我只有两岁</p>
+			<p>请尽情挥洒您的创意！</p>
+		</div>
+		<div class="col" id="more">
+			<h2>新模块的标题</h2>
+			<p>想写的内容，可以放<a href="网址">链接文字</a></p>
+			<p>想加几行加几行</p>
+		</div>
+	</main>
+	<footer>
+		本网站由超级小睦强力驱动<br>		<!--<br>强制换行-->
+		创建于2026/09/15
+	</footer>
+</body>
+</html>

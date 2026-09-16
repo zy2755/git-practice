@@ -70,6 +70,13 @@
 			border-radius: 10px;			/* 圆角 */
 			padding: 16px 20px;
 		}
+		#clock {
+			text-align: center;				/* 时间居中显示 */
+			font-size: 1.15em;
+			color: #c4e0ff;					/* 淡蓝色，和整体配色一致 */
+			padding: 10px 0 0;
+			letter-spacing: 0.5px;			/* 字距稍微拉开一点，更好看 */
+		}
 
 		/* 媒体查询：屏幕宽度小于600px（手机）时，改成单列布局 */
 		@media (max-width: 600px) {
@@ -96,6 +103,7 @@
 		<a href="#more">更多</a>
 	</nav>
 	<header id="top">小睦巨献</header>	<!--HTML语义头部标签-->
+	<div id="clock">时间加载中…</div>	<!--时间就显示在这个盒子里，由下面的JS负责填内容-->
 	<main>
 		<h1>Hello, World!</h1>
 
@@ -128,5 +136,28 @@
 		本网站由超级小睦强力驱动<br>		<!--<br>强制换行-->
 		创建于2026/09/15
 	</footer>
+
+	<script>
+		// 这里是 JavaScript 地盘：负责"网页会做什么"
+		// 注释用 // 或 /* */ 都可以
+
+		function updateClock() {
+			const now = new Date();										// 拿到"此刻"的时间对象
+			const y  = now.getFullYear();								// 年
+			const m  = String(now.getMonth() + 1).padStart(2, '0');		// 月（注意：从0开始算，所以要+1）
+			const d  = String(now.getDate()).padStart(2, '0');			// 日
+			const hh = String(now.getHours()).padStart(2, '0');			// 时
+			const mm = String(now.getMinutes()).padStart(2, '0');		// 分
+			const ss = String(now.getSeconds()).padStart(2, '0');		// 秒
+			const week = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][now.getDay()];
+
+			// 把拼好的文字塞进 id 为 clock 的那个盒子里
+			document.getElementById('clock').textContent =
+				y + '年' + m + '月' + d + '日 ' + week + ' ' + hh + ':' + mm + ':' + ss;
+		}
+
+		updateClock();						// 打开页面先立刻显示一次，免得有一秒空白
+		setInterval(updateClock, 1000);		// 每1000毫秒（1秒）自动执行一次，时间就"活"了
+	</script>
 </body>
 </html>

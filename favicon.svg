@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+	<!-- 网站图标（favicon）：深蓝紫圆角底 + 金色的「睦」字，122x122 以内最合适 -->
+	<rect width="128" height="128" rx="28" fill="#232946"/>
+	<text x="64" y="90" font-size="84" text-anchor="middle" font-weight="bold"
+	      font-family="Microsoft YaHei, PingFang SC, Helvetica, sans-serif"
+	      fill="#ffd700">睦</text>
+</svg>

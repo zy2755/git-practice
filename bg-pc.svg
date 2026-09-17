@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+	<!-- 电脑端壁纸（横版 16:9）：极浅的雾蓝白渐变 + 两团柔和光晕 + 几粒淡色光点
+	     配合浅色皮肤，只提供"空气感"，不抢内容的视线 -->
+	<defs>
+		<linearGradient id="skyL" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0%" stop-color="#f9fbfd"/>
+			<stop offset="55%" stop-color="#f4f8fb"/>
+			<stop offset="100%" stop-color="#eef3f8"/>
+		</linearGradient>
+		<radialGradient id="glowL" cx="0.16" cy="0.86" r="0.62">
+			<stop offset="0%" stop-color="#5b8cc7" stop-opacity="0.10"/>
+			<stop offset="60%" stop-color="#5b8cc7" stop-opacity="0.035"/>
+			<stop offset="100%" stop-color="#5b8cc7" stop-opacity="0"/>
+		</radialGradient>
+		<radialGradient id="glowL2" cx="0.84" cy="0.12" r="0.55">
+			<stop offset="0%" stop-color="#c9a227" stop-opacity="0.09"/>
+			<stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
+		</radialGradient>
+	</defs>
+
+	<rect width="1920" height="1080" fill="url(#skyL)"/>
+	<rect width="1920" height="1080" fill="url(#glowL)"/>
+	<rect width="1920" height="1080" fill="url(#glowL2)"/>
+
+	<!-- 淡色光点：只是若有若无的颗粒感，不是星星了 -->
+	<g fill="#5b8cc7">
+		<circle cx="180" cy="150" r="2.4" opacity="0.10"/>
+		<circle cx="420" cy="90"  r="1.6" opacity="0.08"/>
+		<circle cx="700" cy="210" r="2.0" opacity="0.09"/>
+		<circle cx="980" cy="120" r="1.5" opacity="0.07"/>
+		<circle cx="1240" cy="250" r="2.6" opacity="0.09"/>
+		<circle cx="1520" cy="140" r="1.8" opacity="0.08"/>
+		<circle cx="1780" cy="300" r="2.2" opacity="0.08"/>
+		<circle cx="260" cy="420" r="1.4" opacity="0.07"/>
+		<circle cx="620" cy="520" r="2.1" opacity="0.07"/>
+		<circle cx="1120" cy="470" r="1.7" opacity="0.06"/>
+		<circle cx="1660" cy="560" r="2.3" opacity="0.07"/>
+		<circle cx="880" cy="700" r="1.6" opacity="0.05"/>
+		<circle cx="1400" cy="780" r="1.9" opacity="0.05"/>
+		<circle cx="340" cy="880" r="1.5" opacity="0.05"/>
+		<circle cx="1040" cy="900" r="2.0" opacity="0.05"/>
+	</g>
+
+	<!-- 右下角一轮很淡的月亮 -->
+	<circle cx="1620" cy="220" r="46" fill="#ffffff" opacity="0.55"/>
+	<circle cx="1620" cy="220" r="22" fill="#ffffff" opacity="0.75"/>
+</svg>

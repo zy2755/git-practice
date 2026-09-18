@@ -5,10 +5,32 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">	<!--让手机按设备宽度渲染，响应式的前提-->
 	<title>小睦聚合</title>
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">	<!--浏览器标签页上的小图标-->
+	<link rel="alternate icon" type="image/png" href="favicon-32.png">	<!--SVG 兼容性差的老浏览器/手机内核会退回用这张-->
+	<link rel="apple-touch-icon" href="apple-touch-icon.png">	<!--iPhone 加到主屏幕时用的 180x180 大图标-->
+
+	<script>
+		// 深色模式第一步：抢在页面画出第一帧之前把主题定好。
+		// 顺序是：先看 localStorage 里有没有上次手动选的，
+		// 没有就问系统（prefers-color-scheme）。
+		// 不提前设的话，深色用户会先看到一下白屏再吧地变黑（行话叫 FOUC 闪烁）。
+		// localStorage 是浏览器给每个网址发的小本本，下次打开还能读到；
+		// 用 try 包住是因为个别隐私模式下读写会报错，别让小错误弄崩页面。
+		(function () {
+			var t = null;
+			try { t = localStorage.getItem('xm-theme'); } catch (e) {}
+			if (t !== 'dark' && t !== 'light') {
+				t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+			}
+			document.documentElement.setAttribute('data-theme', t);
+		})();
+	</script>
 
 	<!-- 【样式一】主题变量表：所有颜色/圆角/间距都定义在这里。
-	     想换皮肤只改 theme.css，不用动下面的代码。 -->
-	<link rel="stylesheet" href="theme.css">
+	     想换皮肤只改 theme.css，不用动下面的代码。
+	     末尾的 ?v=2 是「版本号」：改了 theme.css 内容后把它 +1（下次写 ?v=3），
+	     浏览器一看到地址变了就会重新下载，不会拿旧的凑合。
+	     这是治浏览器缓存的土办法，简单有效。 -->
+	<link rel="stylesheet" href="theme.css?v=2">
 
 	<style>
 		/* style 块里是 CSS 世界，注释要用这种斜杠星号写法 */
@@ -30,6 +52,7 @@
 		body {
 			background-color: var(--c-bg);	/* 兜底纯色：图片没加载出来时显示这个 */
 			color: var(--c-text);			/* 正文颜色，来自主题变量 */
+			transition: background-color var(--ease), color var(--ease);	/* 切换深浅色时颜色平滑过渡，不硬切 */
 			font-family: var(--font-sans);
 			font-size: var(--fs-base);
 			line-height: var(--lh-base);	/* 中文行高给足，读起来透气 */
@@ -38,8 +61,9 @@
 			min-height: 100vh;
 			display: flex;					/* 让页脚能贴到底部 */
 			flex-direction: column;
-			/* 壁纸：现在换成了极浅的柔和渐变图，和浅色皮肤配套 */
-			background-image: url('bg-pc.svg');	/* 电脑端壁纸：横版 */
+			/* 壁纸：具体用哪张由 theme.css 里的 --bg-image 变量决定
+			   （浅色=柔和渐变，深色=夜空，手机自动换竖版） */
+			background-image: var(--bg-image);	/* 从主题变量读取，换壁纸不用改这里 */
 			background-size: cover;
 			background-position: center;
 			background-repeat: no-repeat;
@@ -60,7 +84,8 @@
 		nav {
 			position: sticky;			/* 粘在屏幕顶部，页面滚动时菜单不跑掉 */
 			top: 0;
-			background: var(--nav-bg);	/* 半透明白底 */
+			background: var(--nav-bg);	/* 半透明底色（浅色皮肤=白，深色=夜蓝） */
+			transition: background var(--ease);
 			backdrop-filter: blur(var(--nav-blur));			/* 毛玻璃效果 */
 			-webkit-backdrop-filter: blur(var(--nav-blur));	/* Safari 也要写一份 */
 			border-bottom: 1px solid var(--c-border);
@@ -86,6 +111,27 @@
 		nav a:hover {
 			background: var(--c-surface-hover);	/* 悬停时有个底色反馈 */
 			color: var(--c-primary);			/* 同时文字变主色 */
+		}
+
+		/* 深色模式切换按钮：长得和导航项一样，但它是 button，
+		   要手动清掉浏览器默认样式（灰底、边框、不是页面字体） */
+		#themeToggle {
+			appearance: none;			/* 去掉系统按钮的原生皮肤 */
+			border: none;
+			background: transparent;
+			cursor: pointer;			/* 鼠标移上去变小手 */
+			font-family: inherit;		/* button 默认不用页面的字体，要补一下 */
+			color: var(--c-text-muted);
+			padding: var(--sp-2) var(--sp-4);
+			border-radius: var(--radius-pill);
+			font-size: var(--fs-sm);
+			font-weight: var(--fw-medium);
+			line-height: var(--lh-tight);
+			transition: background var(--ease), color var(--ease);
+		}
+		#themeToggle:hover {
+			background: var(--c-surface-hover);
+			color: var(--c-primary);
 		}
 
 		/* ============================================================
@@ -175,7 +221,7 @@
 			border-radius: var(--radius-lg);
 			box-shadow: 0 1px 3px var(--c-shadow);
 			padding: var(--sp-6) var(--sp-6) var(--sp-5);
-			transition: box-shadow var(--ease), border-color var(--ease), transform var(--ease);
+			transition: background-color var(--ease), box-shadow var(--ease), border-color var(--ease), transform var(--ease);
 		}
 		.col:hover {
 			box-shadow: 0 4px 14px var(--c-shadow-hover);	/* 悬停时轻轻浮起 */
@@ -235,8 +281,8 @@
 				font-size: var(--fs-xs);
 			}
 			body {
-				background-image: url('bg-mobile.svg');	/* 手机换成竖版壁纸 */
 				background-attachment: scroll;			/* 手机上关掉固定，避免滚动卡顿 */
+				/* 壁纸换竖版的逻辑也搬去 theme.css 了（--bg-image 变量统一管理） */
 			}
 		}
 	</style>
@@ -249,6 +295,7 @@
 			<a href="#dash">仪表盘</a>
 			<a href="#dongman">动漫</a>
 			<a href="#notes">一些碎碎念</a>
+			<button id="themeToggle" type="button" title="切换深色/浅色模式">◐ 夜间</button>	<!--文字由 JS 根据当前模式换-->
 		</div>
 	</nav>
 
@@ -277,7 +324,7 @@
 		<div class="col" id="dongman">
 			<h2>来在线看动漫</h2>
 			<p>这是<a href="https://next.xifanacg.com/">稀饭动漫</a>，这个还行</p>
-			<p>这是<a href="https://www.gugu3.com/">咕咕番</a>，这个有点慢</p>
+			<p>这是<a href="https://www.gugu3.com/">咕咕番</a></p>
 			<p>不过还是推荐下载高清原片或在软件上看</p>
 			<p>广告不会太多，而且相比更稳定</p>
 		</div>
@@ -317,6 +364,39 @@
 
 		updateClock();						// 打开页面先立刻显示一次，免得有一秒空白
 		setInterval(updateClock, 1000);		// 每1000毫秒（1秒）自动执行一次，时间就"活"了
+
+		/* ---------- 深色模式切换（第二步） ----------
+		   分工：<head> 里的脚本负责「进场前先定调」（防闪烁），
+		   这里的脚本负责「进场后的所有互动」：点按钮切换、记小本本、
+		   盯着系统深浅色的变化。
+		   CSS 那边的分工：深色变量全部挂在 html[data-theme="dark"] 上，
+		   JS 从头到尾只干一件事——改 html 的 data-theme 属性。 */
+
+		var THEME_KEY = 'xm-theme';				// 存进 localStorage 的键名
+		var rootEl = document.documentElement;	// documentElement 就是 <html> 标签本身
+		var sysDark = window.matchMedia('(prefers-color-scheme: dark)');	// 一个「系统深浅色探测器」
+
+		function setTheme(t) {
+			rootEl.setAttribute('data-theme', t);	// 一行代码换装，剩下的全交给 CSS 变量
+			document.getElementById('themeToggle').textContent = (t === 'dark') ? '◐ 日间' : '◐ 夜间';
+		}
+
+		// 打开页面时把按钮文字和当前模式对齐（模式本身 head 里已定好）
+		setTheme(rootEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+		document.getElementById('themeToggle').addEventListener('click', function () {
+			var next = (rootEl.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';	// 是黑就变白，是白就变黑
+			setTheme(next);
+			try { localStorage.setItem(THEME_KEY, next); } catch (e) {}	// 记到小本本上，下次打开还认
+		});
+
+		// 没手动选过的话，系统切换深浅色时页面跟着变
+		//（比如 Windows 傍晚自动切夜间模式，这边不用刷新就能跟上）
+		sysDark.addEventListener('change', function (e) {
+			if (!localStorage.getItem(THEME_KEY)) {
+				setTheme(e.matches ? 'dark' : 'light');
+			}
+		});
 	</script>
 </body>
 </html>

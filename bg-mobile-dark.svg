@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280" preserveAspectRatio="xMidYMid slice">
+	<!-- 手机端壁纸（竖版 9:16）：深蓝紫夜空 + 星星 + 顶部柔和金色光晕 -->
+	<defs>
+		<linearGradient id="skyM" x1="0" y1="0" x2="0.6" y2="1">
+			<stop offset="0%" stop-color="#1a1f38"/>
+			<stop offset="60%" stop-color="#1b2138"/>
+			<stop offset="100%" stop-color="#141830"/>
+		</linearGradient>
+		<radialGradient id="glowM" cx="0.5" cy="0.12" r="0.65">
+			<stop offset="0%" stop-color="#ffd700" stop-opacity="0.20"/>
+			<stop offset="70%" stop-color="#ffd700" stop-opacity="0.04"/>
+			<stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+		</radialGradient>
+	</defs>
+
+	<rect width="720" height="1280" fill="url(#skyM)"/>
+	<rect width="720" height="1280" fill="url(#glowM)"/>
+
+	<g fill="#ffffff">
+		<circle cx="110" cy="180" r="2.0" opacity="0.65"/>
+		<circle cx="300" cy="110" r="1.5" opacity="0.5"/>
+		<circle cx="520" cy="230" r="2.2" opacity="0.6"/>
+		<circle cx="640" cy="360" r="1.6" opacity="0.5"/>
+		<circle cx="180" cy="420" r="1.8" opacity="0.45"/>
+		<circle cx="420" cy="520" r="2.4" opacity="0.5"/>
+		<circle cx="90"  cy="700" r="1.5" opacity="0.4"/>
+		<circle cx="580" cy="780" r="2.0" opacity="0.4"/>
+		<circle cx="240" cy="900" r="1.7" opacity="0.35"/>
+		<circle cx="480" cy="1040" r="2.2" opacity="0.3"/>
+		<circle cx="140" cy="1150" r="1.6" opacity="0.28"/>
+		<circle cx="620" cy="1200" r="1.9" opacity="0.25"/>
+	</g>
+</svg>

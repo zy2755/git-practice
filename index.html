@@ -3,10 +3,21 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">	<!--让手机按设备宽度渲染，响应式的前提-->
+	<meta name="description" content="小睦的个人主页：一些小链接、常用仪表盘、在线看动漫的地方，还有一些碎碎念。">
 	<title>小睦聚合</title>
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">	<!--浏览器标签页上的小图标-->
 	<link rel="alternate icon" type="image/png" href="favicon-32.png">	<!--SVG 兼容性差的老浏览器/手机内核会退回用这张-->
 	<link rel="apple-touch-icon" href="apple-touch-icon.png">	<!--iPhone 加到主屏幕时用的 180x180 大图标-->
+
+	<!-- 分享卡片：把链接发到微信/QQ 时，人家抓的就是下面这几条。
+	     og:image 先留空，由 og-image.js 现画一张 1200×630 的图填进去 -->
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="小睦聚合">
+	<meta property="og:description" content="一些小链接、常用仪表盘、在线看动漫的地方，还有一些碎碎念。">
+	<meta property="og:image" content="" data-og-image>
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:image" content="" data-og-image>
+	<script src="og-image.js?v=1"></script>
 
 	<script>
 		// 深色模式第一步：抢在页面画出第一帧之前把主题定好。
@@ -28,10 +39,10 @@
 
 	<!-- 【样式一】主题变量表：所有颜色/圆角/间距都定义在这里。
 	     想换皮肤只改 theme.css，不用动下面的代码。
-	     末尾的 ?v=N 是「版本号」：改了 theme.css 内容后把它 +1（这次 ?v=3），
+	     末尾的 ?v=N 是「版本号」：改了 theme.css 内容后把它 +1（这次 ?v=5），
 	     浏览器一看到地址变了就会重新下载，不会拿旧的凑合。
 	     这是治浏览器缓存的土办法，简单有效。 -->
-	<link rel="stylesheet" href="theme.css?v=3">
+	<link rel="stylesheet" href="theme.css?v=5">
 
 	<style>
 		/* style 块里是 CSS 世界，注释要用这种斜杠星号写法 */
@@ -62,6 +73,8 @@
 			min-height: 100vh;
 			display: flex;					/* 让页脚能贴到底部 */
 			flex-direction: column;
+			position: relative;				/* 给下面那层光点做定位基准 */
+			overflow-x: hidden;				/* 光点飘到屏幕外时不出现横向滚动条 */
 			/* 壁纸：具体用哪张由 theme.css 里的 --bg-image 变量决定
 			   （浅色=柔和渐变，深色=夜空，手机自动换竖版） */
 			background-image: var(--bg-image);	/* 从主题变量读取，换壁纸不用改这里 */
@@ -71,12 +84,82 @@
 			background-attachment: fixed;	/* 滚动时壁纸不动，更像"墙纸" */
 		}
 
+		/* 氛围光点层：固定在屏幕最底层、不拦鼠标。
+		   body::before / ::after 各画一层"重复的径向渐变圆点"，
+		   两层错开尺寸和速度往上飘 —— 纯 CSS 实现，不用 canvas，
+		   省电、不卡、也能被 prefers-reduced-motion 一键关掉。 */
+		body::before,
+		body::after {
+			content: '';
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: -50%;				/* 上下各留半屏余量，飘动时不会露出空档 */
+			bottom: -50%;
+			z-index: -1;			/* 压在内容和壁纸下面 */
+			pointer-events: none;	/* 鼠标穿透，不影响点击 */
+			background-repeat: repeat;
+			transition: opacity var(--ease);
+		}
+		body::before {
+			background-image:
+				radial-gradient(circle, var(--dot-1) 0 2px, transparent 2.6px),
+				radial-gradient(circle, var(--dot-2) 0 3px, transparent 3.8px);
+			background-size: 260px 260px, 420px 420px;
+			animation: floatUp 26s linear infinite;
+		}
+		body::after {
+			background-image:
+				radial-gradient(circle, var(--dot-3) 0 1.6px, transparent 2.2px),
+				radial-gradient(circle, var(--dot-4) 0 2.6px, transparent 3.2px);
+			background-size: 340px 340px, 520px 520px;
+			background-position: 120px 60px, 30px 200px;
+			animation: floatUp 44s linear infinite;
+		}
+		@keyframes floatUp {
+			from { transform: translateY(0); }
+			to   { transform: translateY(-260px); }
+		}
+
 		/* 内容统一限宽并居中，屏幕再宽也不会拉成一条长线 */
 		.nav-inner, header, #clock, main, footer {
 			width: 100%;
 			max-width: var(--content-max);
 			margin-left: auto;
 			margin-right: auto;
+		}
+
+		/* ============================================================
+		   0.5 入场动画与渐变标题（跟"绮望·诗蔻蒂"那站学来的两招）
+		   ------------------------------------------------------------
+		   · fadeUp：从下方 18px 淡入。JS 给每个要出场的元素加 .reveal +
+		     内联 --d（延迟秒数），元素滚进视野时再加 .in 触发。
+		   · gradText：文字本身没颜色，颜色来自一层会缓慢流动的渐变，
+		     再被 background-clip 抠出来填进字里。
+		   ============================================================ */
+		@keyframes fadeUp {
+			from { opacity: 0; transform: translateY(18px); }
+			to   { opacity: 1; transform: none; }
+		}
+		.reveal {
+			opacity: 0;		/* 还没滚到时先隐身 */
+		}
+		.reveal.in {
+			animation: fadeUp .62s cubic-bezier(.22, .68, .3, 1) both;
+			animation-delay: var(--d, 0s);
+		}
+		@keyframes gradShift {
+			0%   { background-position: 0% 50%; }
+			50%  { background-position: 100% 50%; }
+			100% { background-position: 0% 50%; }
+		}
+		.grad-text {
+			background-image: linear-gradient(90deg, var(--c-primary), var(--c-accent), var(--c-primary-hover), var(--c-primary));
+			background-size: 300% 100%;		/* 背景比文字宽 3 倍，位移时颜色才会"流" */
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;				/* 让字变成渐变背景的"窗口" */
+			animation: gradShift 9s ease-in-out infinite;
 		}
 
 		/* ============================================================
@@ -143,6 +226,7 @@
 			text-decoration: none;
 			border-bottom: 1px solid transparent;	/* 先占位，悬停时再显形，避免文字抖动 */
 			transition: color var(--ease), border-color var(--ease);
+			-webkit-tap-highlight-color: transparent;	/* 手机上点链接不闪那圈灰蓝高亮 */
 		}
 		a:hover {
 			color: var(--c-primary-hover);	/* 伪类：鼠标悬停时链接变色 */
@@ -215,25 +299,48 @@
 			border-bottom: 1px solid var(--c-border);	/* 标题下加一条细线，层次更清楚 */
 		}
 
-		/* 卡片：白底 + 极淡投影 + 大圆角，这是"轻盈感"的主要来源 */
+		/* 卡片：半透明底 + 毛玻璃 + 极淡投影 + 大圆角，
+		   这是"轻盈感"的主要来源（跟学来的玻璃拟态） */
 		.col {
-			background: var(--c-surface);
-			border: 1px solid var(--c-border);
+			background: var(--c-card-bg);
+			backdrop-filter: blur(14px);			/* 毛玻璃：透出后面的壁纸和光点 */
+			-webkit-backdrop-filter: blur(14px);
+			border: 1px solid var(--c-card-border);
 			border-radius: var(--radius-lg);
-			box-shadow: 0 1px 3px var(--c-shadow);
+			box-shadow: 0 6px 20px var(--c-shadow);
 			padding: var(--sp-6) var(--sp-6) var(--sp-5);
 			transition: background-color var(--ease), box-shadow var(--ease), border-color var(--ease), transform var(--ease);
 		}
 		.col:hover {
-			box-shadow: 0 4px 14px var(--c-shadow-hover);	/* 悬停时轻轻浮起 */
+			box-shadow: 0 14px 34px var(--c-shadow-hover);	/* 悬停时轻轻浮起 */
 			border-color: var(--c-border-hover);
-			transform: translateY(-2px);
+			transform: translateY(-4px);
 		}
 		.col p {
 			margin: 0 0 var(--sp-3);	/* 段落之间留出呼吸空间 */
 		}
 		.col p:last-child {
 			margin-bottom: 0;			/* 最后一段不留多余尾巴 */
+		}
+
+		/* 卡片内如果直接放列表（以后用 data.js 加条目时可能用到） */
+		.col ul {
+			margin: 0;
+			padding-left: var(--sp-5);
+		}
+
+		/* ============================================================
+		   4.5 分享缩略图：不给访客看，只在页面里真的画一遍
+		   og-image.js 用 canvas 生成 share.png 需要 DOM 里有这张图；
+		   这里把它缩到不可见，但不设 display:none（否则某些浏览器不加载）。
+		   ============================================================ */
+		.share-gen {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			opacity: 0;
+			pointer-events: none;
+			left: -9999px;
 		}
 
 		/* ============================================================
@@ -295,6 +402,12 @@
 		@media (prefers-reduced-motion: reduce) {
 			html { scroll-behavior: auto; }
 			.col:hover { transform: none; }
+			/* 光点层停住、渐变动画停住、入场动画直接显示终态 */
+			body::before,
+			body::after { animation: none; }
+			.grad-text { animation: none; }
+			.reveal { opacity: 1; }
+			.reveal.in { animation: none; }
 			* { transition-duration: 0.01ms !important; }
 		}
 
@@ -325,10 +438,19 @@
 				padding: var(--sp-1) var(--sp-3);
 				font-size: var(--fs-xs);
 			}
+			#themeToggle {
+				padding: var(--sp-1) var(--sp-3);
+				font-size: var(--fs-xs);
+			}
 			body {
 				background-attachment: scroll;			/* 手机上关掉固定，避免滚动卡顿 */
 				/* 壁纸换竖版的逻辑也搬去 theme.css 了（--bg-image 变量统一管理） */
 			}
+			/* 光点层在手机上停掉：省电，也避免小屏上滚动时掉帧 */
+			body::before,
+			body::after { animation: none; }
+			/* 小屏上少一列，卡片一律单列，防止网格被撑破 */
+			main { grid-template-columns: 1fr; }
 		}
 	</style>
 </head>
@@ -344,11 +466,11 @@
 		</div>
 	</nav>
 
-	<header id="top">小睦巨献</header>	<!--HTML语义头部标签-->
+	<header id="top" class="grad-text">小睦巨献</header>	<!--HTML语义头部标签；渐变字效果来自 .grad-text -->
 	<div id="clock">时间加载中…</div>	<!--时间就显示在这个盒子里，由下面的JS负责填内容-->
 
 	<main>
-		<h1>Hello, World!</h1>
+		<h1 class="grad-text">Hello, World!</h1>
 
 		<div class="col" id="links">
 			<h2>一些小链接</h2>
@@ -394,12 +516,91 @@
 			<button class="skin-pill" type="button" data-skin="mint">薄荷</button>
 		</div>
 		本网站由超级小睦强力驱动<br>		<!--<br>强制换行-->
-		创建于2026/09/15
+		创建于2026/09/15<br>
+		<span id="footNote"></span>
 	</footer>
 
+	<!-- 下面这个 img 不给访客看，只在页面里真的加载一遍 favicon，
+	     好让 og-image.js（分享缩略图）能把它画进图里。 -->
+	<img class="share-gen" src="favicon.svg" alt="" aria-hidden="true">
+
+	<script src="data.js?v=2"></script>
 	<script>
 		// 这里是 JavaScript 地盘：负责"网页会做什么"
 		// 注释用 // 或 /* */ 都可以
+
+		/* ---------- 第 0 步：把 data.js 里的数据渲染成页面 ----------
+		   以前这里是写死的一堆 <div>，现在文案都在 data.js 里，
+		   这段脚本负责"照着数据铺卡片"。以后加链接只改 data.js。 */
+		(function renderFromData() {
+			if (typeof siteData === 'undefined') return;	// data.js 没加载成功就保持静态内容
+
+			// 1) 导航：首页 + 各卡片名
+			var navInner = document.querySelector('.nav-inner');
+			if (navInner) {
+				navInner.querySelectorAll('a').forEach(function (a) { a.remove(); });
+				var toggle = document.getElementById('themeToggle');
+				siteData.nav.forEach(function (item) {
+					var a = document.createElement('a');
+					a.href = '#' + item.id;
+					a.textContent = item.name;
+					navInner.insertBefore(a, toggle);
+				});
+			}
+
+			// 2) 页面上几处文字
+			var header = document.querySelector('header');
+			if (header && siteData.homeTitle) header.textContent = siteData.homeTitle;
+			var h1 = document.querySelector('h1');
+			if (h1 && siteData.pageTitle) h1.textContent = siteData.pageTitle;
+			document.title = siteData.brand + '聚合';
+			if (siteData.footer) {
+				var foot = document.getElementById('footNote');
+				if (foot) foot.textContent = siteData.footer;
+			}
+
+			// 3) 卡片
+			var main = document.querySelector('main');
+			if (main) {
+				main.querySelectorAll('.col').forEach(function (c) { c.remove(); });
+				siteData.cards.forEach(function (card) {
+					var col = document.createElement('div');
+					col.className = 'col';
+					col.id = card.id;
+
+					var h2 = document.createElement('h2');
+					h2.textContent = card.title;
+					col.appendChild(h2);
+
+					(card.items || []).forEach(function (it) {
+						var p = document.createElement('p');
+						p.appendChild(document.createTextNode(it.text || ''));
+						if (it.link) {
+							var a = document.createElement('a');
+							a.href = it.link;
+							a.target = '_blank';
+							a.rel = 'noopener noreferrer';
+							a.textContent = it.linkText || it.link;
+							p.appendChild(a);
+						}
+						// tail（写法一）：链接后面的尾巴文字，推荐写法
+						if (it.tail) p.appendChild(document.createTextNode(it.tail));
+						// rest（写法二）：一整句里把网址放 link，剩下的话放 rest，
+						// 方便一长句直接粘贴进来，不用拆成 text + tail 两段
+						if (it.rest) p.appendChild(document.createTextNode(it.rest));
+						col.appendChild(p);
+					});
+
+					(card.notes || []).forEach(function (txt) {
+						var p = document.createElement('p');
+						p.textContent = txt;
+						col.appendChild(p);
+					});
+
+					main.appendChild(col);
+				});
+			}
+		})();
 
 		function updateClock() {
 			const now = new Date();										// 拿到"此刻"的时间对象
@@ -478,6 +679,42 @@
 				setTheme(e.matches ? 'dark' : 'light');
 			}
 		});
+
+		/* ---------- 滚动入场动画（跟"绮望·诗蔻蒂"那站学的） ----------
+		   做法：给要出场的元素挂上 .reveal 和一段延迟 --d，
+		   等它滚进视野时再加 .in，CSS 里的 fadeUp 动画就跑起来。
+		   IntersectionObserver 是浏览器自带的"看我进屏幕了吗"的工具，
+		   比监听 scroll 事件省性能（不用每滚一像素算一次）。 */
+		(function revealOnScroll() {
+			// 只有我们支持的浏览器才加 .reveal，不支持时元素保持正常显示，
+			// 不会出现"动画没跑所以看不见"的惨案。
+			if (!('IntersectionObserver' in window)) return;
+
+			var items = [];
+			// 出场顺序：导航整条 → 标题 → 时间 → 每张卡片
+			document.querySelectorAll('header, #clock, h1').forEach(function (el) {
+				items.push(el);
+			});
+			document.querySelectorAll('.col').forEach(function (el) {
+				items.push(el);
+			});
+
+			items.forEach(function (el, i) {
+				el.classList.add('reveal');
+				el.style.setProperty('--d', (i * 0.09) + 's');	// 依次错开一点，像瀑布
+			});
+
+			var io = new IntersectionObserver(function (entries) {
+				entries.forEach(function (en) {
+					if (en.isIntersecting) {
+						en.target.classList.add('in');
+						io.unobserve(en.target);	// 出场一次就够，不用反复演
+					}
+				});
+			}, { threshold: 0.12 });
+
+			items.forEach(function (el) { io.observe(el); });
+		})();
 	</script>
 </body>
 </html>

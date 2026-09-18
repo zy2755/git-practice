@@ -42,6 +42,12 @@
 	--c-shadow:       rgba(35, 55, 80, 0.06);   /* 极淡的卡片投影，制造"轻"的层次 */
 	--c-shadow-hover: rgba(35, 55, 80, 0.10);
 
+	/* ---------- 玻璃拟态（卡片用） ----------
+	   卡片不再是"实心白纸"，而是半透明白 + 毛玻璃，透出后面的壁纸和光点。
+	   --c-card-bg 单独一个变量，是为了深色模式下也能跟着换（见下面各套皮肤）。 */
+	--c-card-bg:     rgba(255, 255, 255, 0.62);
+	--c-card-border: rgba(255, 255, 255, 0.55);
+
 	/* ---------- 圆角 ---------- */
 	--radius-sm:   8px;    /* 小元素：导航项、标签 */
 	--radius-md:   12px;   /* 中等：按钮、内层小卡 */
@@ -104,7 +110,7 @@
 	   --bg-image 是壁纸变量：body 只写一次 var(--bg-image)，
 	   换壁纸（含深色模式的夜空版）就不用碰 index.html 了。 */
 	color-scheme: light;
-	--bg-image: url('bg-pc.svg?v=3');   /* 浅色 · 电脑端壁纸（?v=N 是版本号，换图后+1 可强刷缓存） */
+	--bg-image: url('bg-pc.svg?v=5');   /* 浅色 · 电脑端壁纸（?v=N 是版本号，换图后+1 可强刷缓存） */
 }
 
 
@@ -141,6 +147,9 @@ html[data-theme="warm"] {
 	--c-shadow:       rgba(90, 70, 45, 0.06);
 	--c-shadow-hover: rgba(90, 70, 45, 0.10);
 
+	--c-card-bg:     rgba(255, 253, 248, 0.66);   /* 暖白玻璃 */
+	--c-card-border: rgba(255, 255, 255, 0.6);
+
 	--nav-bg: rgba(255, 253, 249, 0.86);
 
 	color-scheme: light;                        /* 暖米也是浅色皮肤，滚动条等系统控件跟着走浅色 */
@@ -176,6 +185,9 @@ html[data-theme="mint"] {
 	--c-border-hover: #c6ded8;
 	--c-shadow:       rgba(30, 70, 65, 0.06);
 	--c-shadow-hover: rgba(30, 70, 65, 0.10);
+
+	--c-card-bg:     rgba(252, 255, 254, 0.64);   /* 青白玻璃 */
+	--c-card-border: rgba(255, 255, 255, 0.6);
 
 	--nav-bg: rgba(250, 254, 253, 0.86);
 
@@ -229,13 +241,34 @@ html[data-theme="dark"] {
 	--c-shadow:       rgba(0, 0, 0, 0.35);
 	--c-shadow-hover: rgba(0, 0, 0, 0.55);
 
+	--c-card-bg:     rgba(31, 40, 54, 0.62);      /* 深色玻璃：比纯色卡片更通透 */
+	--c-card-border: rgba(255, 255, 255, 0.09);
+
 	/* 顶栏：半透明深底 + 毛玻璃 */
 	--nav-bg: rgba(20, 25, 34, 0.82);
 
 	/* 壁纸：夜空版 */
-	--bg-image: url('bg-pc-dark.svg?v=3');
+	--bg-image: url('bg-pc-dark.svg?v=5');
 }
 
+
+/* ------------------------------------------------------------
+   氛围光点：body::before / ::after 那两层圆点渐变的配色。
+   浅色皮肤用雾蓝 + 一点点金，深夜模式换成淡紫金（像夜空里的星）。
+   想关掉光点，把 --dot-1/--dot-2 的透明度调成 0 即可。
+   ------------------------------------------------------------ */
+:root {
+	--dot-1: rgba(91, 140, 199, .30);
+	--dot-2: rgba(201, 162, 39, .26);
+	--dot-3: rgba(91, 140, 199, .22);
+	--dot-4: rgba(255, 255, 255, .55);
+}
+html[data-theme="dark"] {
+	--dot-1: rgba(127, 168, 217, .34);
+	--dot-2: rgba(224, 184, 79, .28);
+	--dot-3: rgba(163, 194, 232, .24);
+	--dot-4: rgba(255, 255, 255, .30);
+}
 
 /* ------------------------------------------------------------
    壁纸的"手机版"切换（每套皮肤各一张竖版）。
@@ -245,7 +278,7 @@ html[data-theme="dark"] {
    ------------------------------------------------------------ */
 @media (max-width: 600px) {
 	:root {
-		--bg-image: url('bg-mobile.svg?v=3');           /* 雾蓝 · 竖版 */
+		--bg-image: url('bg-mobile.svg?v=5');           /* 雾蓝 · 竖版 */
 	}
 	html[data-theme="warm"] {
 		--bg-image: url('bg-mobile-warm.svg?v=1');      /* 暖米 · 竖版 */
@@ -254,6 +287,6 @@ html[data-theme="dark"] {
 		--bg-image: url('bg-mobile-mint.svg?v=1');      /* 薄荷 · 竖版 */
 	}
 	html[data-theme="dark"] {
-		--bg-image: url('bg-mobile-dark.svg?v=3');      /* 深夜 · 竖版 */
+		--bg-image: url('bg-mobile-dark.svg?v=5');      /* 深夜 · 竖版 */
 	}
 }

@@ -18,7 +18,8 @@
 		(function () {
 			var t = null;
 			try { t = localStorage.getItem('xm-theme'); } catch (e) {}
-			if (t !== 'dark' && t !== 'light') {
+			var valid = ['light', 'dark', 'warm', 'mint'];	// 所有合法皮肤，以后新增一套记得往这里加一个
+			if (valid.indexOf(t) === -1) {
 				t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 			}
 			document.documentElement.setAttribute('data-theme', t);
@@ -27,10 +28,10 @@
 
 	<!-- 【样式一】主题变量表：所有颜色/圆角/间距都定义在这里。
 	     想换皮肤只改 theme.css，不用动下面的代码。
-	     末尾的 ?v=2 是「版本号」：改了 theme.css 内容后把它 +1（下次写 ?v=3），
+	     末尾的 ?v=N 是「版本号」：改了 theme.css 内容后把它 +1（这次 ?v=3），
 	     浏览器一看到地址变了就会重新下载，不会拿旧的凑合。
 	     这是治浏览器缓存的土办法，简单有效。 -->
-	<link rel="stylesheet" href="theme.css?v=2">
+	<link rel="stylesheet" href="theme.css?v=3">
 
 	<style>
 		/* style 块里是 CSS 世界，注释要用这种斜杠星号写法 */
@@ -246,6 +247,50 @@
 			padding: var(--sp-7) var(--page-pad-x) var(--sp-8);
 		}
 
+		/* ============================================================
+		   5.5 皮肤预览条（临时件）
+		   放在页脚是为了"平时不打扰、想看随时能点"。
+		   三个小胶囊 = 三套浅色皮肤；深夜模式由导航右侧的按钮管。
+		   用 aria-pressed 标当前选中项，顺带对读屏软件也友好。
+		   ============================================================ */
+		.skins {
+			display: flex;					/* 横排一行 */
+			justify-content: center;
+			align-items: center;
+			flex-wrap: wrap;				/* 太窄就换行 */
+			gap: var(--sp-2);
+			margin-bottom: var(--sp-5);
+		}
+		.skins-label {
+			color: var(--c-text-faint);
+			font-size: var(--fs-xs);
+		}
+		.skin-pill {
+			appearance: none;						/* 同样是 button，得手动清掉系统默认皮肤 */
+			border: 1px solid var(--c-border);
+			background: var(--c-surface);
+			color: var(--c-text-muted);
+			cursor: pointer;
+			font-family: inherit;
+			font-size: var(--fs-xs);
+			font-weight: var(--fw-medium);
+			line-height: var(--lh-tight);
+			padding: var(--sp-1) var(--sp-4);
+			border-radius: var(--radius-pill);
+			transition: background var(--ease), color var(--ease), border-color var(--ease);
+		}
+		.skin-pill:hover {
+			background: var(--c-surface-hover);
+			color: var(--c-primary);
+			border-color: var(--c-border-hover);
+		}
+		/* 当前生效的那套：淡主色底 + 主色描边，一眼看得出 */
+		.skin-pill[aria-pressed="true"] {
+			background: var(--c-primary-soft);		/* 这个变量终于派上用场了 */
+			border-color: var(--c-primary);
+			color: var(--c-primary);
+		}
+
 		/* 尊重系统的"减少动效"设置：某些人晕动，那就不动 */
 		@media (prefers-reduced-motion: reduce) {
 			html { scroll-behavior: auto; }
@@ -339,6 +384,15 @@
 	</main>
 
 	<footer>
+		<!-- 皮肤预览条：临时放在这里，方便一眼对比几套配色。
+		     如果哪套你觉得不好看，删掉 <button> 那一行就行（变量可以留着）。
+		     哪天定下来了，可以把这一整块搬去顶部导航长期保留。 -->
+		<div class="skins">
+			<span class="skins-label">皮肤预览</span>
+			<button class="skin-pill" type="button" data-skin="light">雾蓝</button>
+			<button class="skin-pill" type="button" data-skin="warm">暖米</button>
+			<button class="skin-pill" type="button" data-skin="mint">薄荷</button>
+		</div>
 		本网站由超级小睦强力驱动<br>		<!--<br>强制换行-->
 		创建于2026/09/15
 	</footer>
@@ -372,28 +426,55 @@
 		   CSS 那边的分工：深色变量全部挂在 html[data-theme="dark"] 上，
 		   JS 从头到尾只干一件事——改 html 的 data-theme 属性。 */
 
-		var THEME_KEY = 'xm-theme';				// 存进 localStorage 的键名
+		var THEME_KEY = 'xm-theme';				// 当前整套外观：light / dark / warm / mint
+		var SKIN_KEY  = 'xm-skin';				// 上次选的"浅色皮肤"：light / warm / mint
+		var DEFAULT_SKIN = 'light';				// 雾蓝是默认皮肤
 		var rootEl = document.documentElement;	// documentElement 就是 <html> 标签本身
 		var sysDark = window.matchMedia('(prefers-color-scheme: dark)');	// 一个「系统深浅色探测器」
+
+		// 读写小本本统一走这两个函数：隐私模式下 localStorage 会报错，
+		// 用 try 兜住，页面不至于因为"记不住偏好"整个崩掉。
+		function readLS(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+		function saveLS(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+		function currentTheme() { return rootEl.getAttribute('data-theme'); }
 
 		function setTheme(t) {
 			rootEl.setAttribute('data-theme', t);	// 一行代码换装，剩下的全交给 CSS 变量
 			document.getElementById('themeToggle').textContent = (t === 'dark') ? '◐ 日间' : '◐ 夜间';
+
+			// 预览条高亮：在深色模式下，高亮"记着的那套浅色皮肤"，
+			// 这样你一眼就知道点「◐ 日间」会回到哪套配色。
+			var active = (t === 'dark') ? (readLS(SKIN_KEY) || DEFAULT_SKIN) : t;
+			document.querySelectorAll('.skin-pill').forEach(function (btn) {
+				btn.setAttribute('aria-pressed', String(btn.getAttribute('data-skin') === active));
+			});
 		}
 
-		// 打开页面时把按钮文字和当前模式对齐（模式本身 head 里已定好）
-		setTheme(rootEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+		// 打开页面时把按钮文字和当前状态对齐（外观本身 head 里已定好）
+		setTheme(currentTheme() || DEFAULT_SKIN);
 
 		document.getElementById('themeToggle').addEventListener('click', function () {
-			var next = (rootEl.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';	// 是黑就变白，是白就变黑
+			// 深色时切回"上次选的浅色皮肤"（没选过就是雾蓝），浅色时切到深夜
+			var next = (currentTheme() === 'dark') ? (readLS(SKIN_KEY) || DEFAULT_SKIN) : 'dark';
 			setTheme(next);
-			try { localStorage.setItem(THEME_KEY, next); } catch (e) {}	// 记到小本本上，下次打开还认
+			saveLS(THEME_KEY, next);
+		});
+
+		// 皮肤预览条：点一下换一整套配色，并记住选择
+		document.querySelectorAll('.skin-pill').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				var skin = btn.getAttribute('data-skin');
+				setTheme(skin);
+				saveLS(THEME_KEY, skin);
+				saveLS(SKIN_KEY, skin);
+			});
 		});
 
 		// 没手动选过的话，系统切换深浅色时页面跟着变
 		//（比如 Windows 傍晚自动切夜间模式，这边不用刷新就能跟上）
 		sysDark.addEventListener('change', function (e) {
-			if (!localStorage.getItem(THEME_KEY)) {
+			if (!readLS(THEME_KEY)) {			// readLS 自带 try，隐私模式下这里也不会崩
 				setTheme(e.matches ? 'dark' : 'light');
 			}
 		});

@@ -104,17 +104,19 @@
 	   --bg-image 是壁纸变量：body 只写一次 var(--bg-image)，
 	   换壁纸（含深色模式的夜空版）就不用碰 index.html 了。 */
 	color-scheme: light;
-	--bg-image: url('bg-pc.svg?v=2');   /* 浅色 · 电脑端壁纸（?v=2 是版本号，换图后+1 可强刷缓存） */
+	--bg-image: url('bg-pc.svg?v=3');   /* 浅色 · 电脑端壁纸（?v=N 是版本号，换图后+1 可强刷缓存） */
 }
 
 
 /* ============================================================
-   第二套皮肤示例：暖米色（浅色）
+   第二套皮肤：暖米色（浅色）
    ------------------------------------------------------------
-   想切换时，在 index.html 的 <html> 标签上加一个属性：
-       <html lang="zh-CN" data-theme="warm">
-   下面的变量就会覆盖上面的默认值。
-   这里只是演示"换肤机制"是通的，日常不用它也不影响。
+   切换方式：点页面底部「皮肤预览」里的「暖米」，
+   或直接给 <html> 加属性 data-theme="warm"。
+   下面的变量会覆盖 :root 里的同名默认值。
+   规矩：每套皮肤都要把 :root 的"颜色类"变量补齐一遍，
+   漏掉的项会静静地继承 :root 的值——之前这里就漏了
+   --c-accent-soft，暖色下金色底其实还是雾蓝版的，故补全。
    ============================================================ */
 html[data-theme="warm"] {
 	--c-bg:            #fbf8f3;
@@ -132,6 +134,7 @@ html[data-theme="warm"] {
 	--c-primary-hover: #9c6b36;
 	--c-primary-soft:  rgba(184, 131, 74, 0.10);
 	--c-accent:        #a8883c;
+	--c-accent-soft:   rgba(168, 136, 60, 0.12);
 
 	--c-border:       #ece3d6;
 	--c-border-hover: #dccfbb;
@@ -139,13 +142,17 @@ html[data-theme="warm"] {
 	--c-shadow-hover: rgba(90, 70, 45, 0.10);
 
 	--nav-bg: rgba(255, 253, 249, 0.86);
+
+	color-scheme: light;                        /* 暖米也是浅色皮肤，滚动条等系统控件跟着走浅色 */
+	--bg-image: url('bg-pc-warm.svg?v=1');      /* 专属暖色壁纸（手机端另有竖版，见文件末尾） */
 }
 
 
 /* ============================================================
-   第三套皮肤示例：薄荷青（浅色）
+   第三套皮肤：薄荷青（浅色）
    ------------------------------------------------------------
-   切换方式：<html lang="zh-CN" data-theme="mint">
+   切换方式同暖米：底部「皮肤预览」点「薄荷」，或给 <html> 加
+   data-theme="mint"。变量同样按"颜色补齐"的规矩写全。
    ============================================================ */
 html[data-theme="mint"] {
 	--c-bg:            #f5faf9;
@@ -163,6 +170,7 @@ html[data-theme="mint"] {
 	--c-primary-hover: #2f8276;
 	--c-primary-soft:  rgba(63, 158, 143, 0.10);
 	--c-accent:        #b0872f;
+	--c-accent-soft:   rgba(176, 135, 47, 0.12);
 
 	--c-border:       #dfece9;
 	--c-border-hover: #c6ded8;
@@ -170,6 +178,9 @@ html[data-theme="mint"] {
 	--c-shadow-hover: rgba(30, 70, 65, 0.10);
 
 	--nav-bg: rgba(250, 254, 253, 0.86);
+
+	color-scheme: light;
+	--bg-image: url('bg-pc-mint.svg?v=1');      /* 专属青绿壁纸 */
 }
 
 
@@ -222,19 +233,27 @@ html[data-theme="dark"] {
 	--nav-bg: rgba(20, 25, 34, 0.82);
 
 	/* 壁纸：夜空版 */
-	--bg-image: url('bg-pc-dark.svg?v=2');
+	--bg-image: url('bg-pc-dark.svg?v=3');
 }
 
 
 /* ------------------------------------------------------------
-   壁纸的"手机版"切换（浅色和深色各一张竖版）。
+   壁纸的"手机版"切换（每套皮肤各一张竖版）。
    写在文件末尾：同样的优先级时，后面的规则赢。
+   （html[data-theme="xx"] 的优先级本来就高于 :root，所以
+     下面这几条谁写在后面都不影响，浅色皮肤各自认领自己的图。）
    ------------------------------------------------------------ */
 @media (max-width: 600px) {
 	:root {
-		--bg-image: url('bg-mobile.svg?v=2');          /* 浅色 · 竖版 */
+		--bg-image: url('bg-mobile.svg?v=3');           /* 雾蓝 · 竖版 */
+	}
+	html[data-theme="warm"] {
+		--bg-image: url('bg-mobile-warm.svg?v=1');      /* 暖米 · 竖版 */
+	}
+	html[data-theme="mint"] {
+		--bg-image: url('bg-mobile-mint.svg?v=1');      /* 薄荷 · 竖版 */
 	}
 	html[data-theme="dark"] {
-		--bg-image: url('bg-mobile-dark.svg?v=2');     /* 深色 · 竖版（优先级更高，必赢） */
+		--bg-image: url('bg-mobile-dark.svg?v=3');      /* 深夜 · 竖版 */
 	}
 }

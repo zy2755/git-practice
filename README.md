@@ -1,6 +1,6 @@
 # git-practice
 
-用于 vs code。这里放的是个人主页「小睦聚合」的源码。
+这里放的是个人主页「小睦聚合」的源码。
 
 - 线上地址：https://xiaomu-home-97792.app.workbuddy.host/
 - 本地预览：直接双击 `index.html`

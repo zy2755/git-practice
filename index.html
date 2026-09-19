@@ -4,6 +4,27 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">	<!--让手机按设备宽度渲染，响应式的前提-->
 	<meta name="description" content="小睦的个人主页：一些小链接、常用仪表盘、在线看动漫的地方，还有一些碎碎念。">
+	<!-- 告诉浏览器"这页的深浅色我说了算"，请它别用自带的"自动深色"功能替我们翻页。
+	     手机浏览器（尤其部分国产浏览器、微信内置浏览器）在系统深色下会把整页反色，
+	     那种反色会让浅色皮肤看起来像"被深色盖住了"，切换时还会闪一下。
+	     下面几行就是把各种"自动变黑"的功能请出去。
+
+	     ★ 关键的一行是 color-scheme，值的写法有个坑：
+	       content="light"      → 意思是"我只会用浅色"，浏览器一看"这页没做深色"，
+	                              就热心地替你把整页翻黑（这就是被反色的根源）。
+	       content="light dark" → 意思是"深浅我都支持"，同样拦不住自动翻黑。
+	       content="only light" → 只有加了这个 only，才是官方的"明确谢绝"，
+	                              浏览器会老老实实按我们 CSS 写的颜色渲染，一下都不改。
+	     （出处：Chrome 开发者博客《自动深色主题》里的 opt-out 写法。）
+	     注意：这个值由页面底部 JS 跟着皮肤一起改成 only light / only dark，
+	     所以深色皮肤下依然能拿到深色的滚动条和输入框。 -->
+	<meta name="color-scheme" content="only light">
+	<meta name="supported-color-schemes" content="light">	<!-- Safari 的旧写法，认不得 only，给个 light 就好 -->
+	<meta name="darkreader-lock">	<!-- Dark Reader 这类深色插件看到它就放过本页 -->
+	<meta name="nightmode" content="disable">	<!-- 部分国产浏览器（UC/QQ 系）的夜间模式开关 -->
+	<meta name="forceDarkMode" content="disable">	<!-- 少数内核认这个写法 -->
+	<!-- 手机浏览器顶栏（地址栏/状态栏）的取色，由底部脚本跟着当前皮肤改 -->
+	<meta name="theme-color" content="#f7f9fb">
 	<title>小睦聚合</title>
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">	<!--浏览器标签页上的小图标-->
 	<link rel="alternate icon" type="image/png" href="favicon-32.png">	<!--SVG 兼容性差的老浏览器/手机内核会退回用这张-->
@@ -34,15 +55,22 @@
 				t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 			}
 			document.documentElement.setAttribute('data-theme', t);
+
+			// 顺手把上面那条 color-scheme 也改成对应的"谢绝自动反色"声明：
+			// 深夜皮肤给 only dark，三套浅色皮肤给 only light。
+			// 放在这里（而不是等 body 跑脚本）是为了赶在首帧之前定好，
+			// 晚一步的话浏览器可能已经先反色一次，那一瞬间的白→黑就是"闪屏"。
+			var cs = document.querySelector('meta[name="color-scheme"]');
+			if (cs) cs.setAttribute('content', t === 'dark' ? 'only dark' : 'only light');
 		})();
 	</script>
 
 	<!-- 【样式一】主题变量表：所有颜色/圆角/间距都定义在这里。
 	     想换皮肤只改 theme.css，不用动下面的代码。
-	     末尾的 ?v=N 是「版本号」：改了 theme.css 内容后把它 +1（这次 ?v=5），
+	     末尾的 ?v=N 是「版本号」：改了 theme.css 内容后把它 +1（这次 ?v=7），
 	     浏览器一看到地址变了就会重新下载，不会拿旧的凑合。
 	     这是治浏览器缓存的土办法，简单有效。 -->
-	<link rel="stylesheet" href="theme.css?v=5">
+	<link rel="stylesheet" href="theme.css?v=7">
 
 	<style>
 		/* style 块里是 CSS 世界，注释要用这种斜杠星号写法 */
@@ -59,6 +87,13 @@
 		html {
 			scroll-behavior: smooth;	/* 点击菜单跳转时平滑滚动，不"咻"地闪过去 */
 			-webkit-text-size-adjust: 100%;	/* 手机上横屏时不自动放大字体 */
+			/* 给 <html> 也铺上底色：这里才是"整张画布"的颜色。
+			   不铺的话，切换皮肤时浏览器会用它的默认底色（浅色白、深色黑）
+			   重画一帧，看起来就是闪一下。 */
+			background-color: var(--c-bg);
+			transition: background-color var(--ease);
+			/* ↑ 这一行还兼管"浏览器自带的自动深色"：声明本页支持深色后，
+			   部分手机浏览器的强制反色就不会再插手（见 <head> 里的 meta）。 */
 		}
 
 		body {
@@ -204,6 +239,7 @@
 			border: none;
 			background: transparent;
 			cursor: pointer;			/* 鼠标移上去变小手 */
+			-webkit-tap-highlight-color: transparent;	/* 手机上点它不要闪那圈灰蓝高亮（会像"闪屏"） */
 			font-family: inherit;		/* button 默认不用页面的字体，要补一下 */
 			color: var(--c-text-muted);
 			padding: var(--sp-2) var(--sp-4);
@@ -374,6 +410,7 @@
 		}
 		.skin-pill {
 			appearance: none;						/* 同样是 button，得手动清掉系统默认皮肤 */
+			-webkit-tap-highlight-color: transparent;	/* 手机上点它别闪高亮 */
 			border: 1px solid var(--c-border);
 			background: var(--c-surface);
 			color: var(--c-text-muted);
@@ -397,6 +434,27 @@
 			border-color: var(--c-primary);
 			color: var(--c-primary);
 		}
+
+		/* 页脚那行"最近更新"，比页脚正文再淡一点，像一枚不抢眼的小印记 */
+		.build-tag {
+			opacity: .72;
+			letter-spacing: .04em;
+		}
+
+		/* 「被自动反色」的自检提示条。
+		   平时是 hidden，只有脚本真的测出浏览器在替我们翻黑时才现身。
+		   刻意用描边而不填实底——它出现时整页颜色本来就已经不可信了，
+		   再叠一块色块反而更乱。 */
+		.auto-dark-hint {
+			display: inline-block;
+			margin-top: var(--sp-2);
+			padding: 4px 10px;
+			border: 1px solid var(--c-border-hover);
+			border-radius: var(--radius-pill);
+			color: var(--c-text-muted);
+			font-size: var(--fs-xs);
+		}
+		.auto-dark-hint[hidden] { display: none; }   /* hidden 要压得住 display:inline-block */
 
 		/* 尊重系统的"减少动效"设置：某些人晕动，那就不动 */
 		@media (prefers-reduced-motion: reduce) {
@@ -515,9 +573,16 @@
 			<button class="skin-pill" type="button" data-skin="warm">暖米</button>
 			<button class="skin-pill" type="button" data-skin="mint">薄荷</button>
 		</div>
-		本网站由超级小睦强力驱动<br>		<!--<br>强制换行-->
+		<span id="footNote">本网站由超级小睦强力驱动</span><br>	<!--这行字由 data.js 的 footer 覆盖；没加载成功时显示里面的静态兜底-->
 		创建于2026/09/15<br>
-		<span id="footNote"></span>
+		<!-- 「最近更新」这行不用手改：底部脚本会读这张网页的 Last-Modified
+		     （也就是服务器上这个文件的最后修改时间）填进去。
+		     好处是——你打开后看到的是哪天的版本，一眼就知道：
+		     如果这行显示的是旧日期，说明你拿到的是缓存里的老副本，不是没更新，是没拉到。 -->
+		<span id="buildTag" class="build-tag">最近更新 —</span>
+		<!-- 平时藏着的自检提示：只有脚本真的测出"浏览器在替我们翻黑"时才显示。
+		     有了它，"是不是那个功能在捣乱"就不用靠猜了。 -->
+		<span id="autoDarkHint" class="auto-dark-hint" hidden>检测到浏览器正在自动反色，页面配色可能不准</span>
 	</footer>
 
 	<!-- 下面这个 img 不给访客看，只在页面里真的加载一遍 favicon，
@@ -557,6 +622,14 @@
 			if (siteData.footer) {
 				var foot = document.getElementById('footNote');
 				if (foot) foot.textContent = siteData.footer;
+			}
+
+			// 2.5) <head> 里那两条介绍文案也一并从 data.js 取，
+			//      省得以后改了 data.js 还要记得回来改 meta（分享卡片用的就是它们）
+			if (siteData.siteDesc) {
+				document.querySelectorAll('meta[name="description"], meta[property="og:description"]').forEach(function (m) {
+					m.setAttribute('content', siteData.siteDesc);
+				});
 			}
 
 			// 3) 卡片
@@ -620,6 +693,51 @@
 		updateClock();						// 打开页面先立刻显示一次，免得有一秒空白
 		setInterval(updateClock, 1000);		// 每1000毫秒（1秒）自动执行一次，时间就"活"了
 
+		/* ---------- 页脚「最近更新」：自动读这张网页的修改时间 ----------
+		   document.lastModified 是浏览器从响应头里拿到的"这个文件的最后修改时间"，
+		   不用我们手写日期，也不会忘记更新。
+		   它还有个额外用处：如果你看到的是缓存的旧副本，这里显示的就是旧日期，
+		   一眼就能分辨"是没更新"还是"没拉到新版"。 */
+		(function showBuildTime() {
+			var el = document.getElementById('buildTag');
+			if (!el) return;
+			var d = new Date(document.lastModified);
+			if (isNaN(d.getTime())) return;		// 读不到就保持"—"，不编一个假日期
+			function p(n) { return String(n).padStart(2, '0'); }
+			el.textContent = '最近更新 ' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+				' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+		})();
+
+		/* ---------- 自检：浏览器是不是在替我们"自动反色" ----------
+		   原理来自 Chrome 官方文档《自动深色主题》里那段探测代码：
+		   造一个纯白的小方块，读它"实际算出来的颜色"。
+		   如果拿到的不是纯白 rgb(255,255,255)，说明浏览器在渲染时
+		   偷偷把颜色改掉了——也就是我们一直怀疑的"自动反色"。
+		   正常情况下（我们已经在 <head> 声明了 color-scheme: only light）
+		   这个探测应当永远为假，提示条不会出现；
+		   万一它冒出来了，就成了"实锤"：问题在浏览器设置，不在页面代码。 */
+		(function detectAutoDark() {
+			var probe = document.createElement('div');
+			// 全 0 尺寸 + 直接脱离文档流，保证它既看不见、也不影响布局
+			probe.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:0;height:0;' +
+				'background-color:rgb(255,255,255);';
+			document.body.appendChild(probe);
+
+			// 用 setTimeout 0 推到本轮渲染之后再读，拿到的才是"最终结算颜色"
+			setTimeout(function () {
+				var c = getComputedStyle(probe).backgroundColor;
+				document.body.removeChild(probe);
+				// 容差处理：少数内核会把 rgb(255,255,255) 写成 rgba(255,255,255,1)
+				var isWhite = /^rgb\(\s*255,\s*255,\s*255\s*\)$/.test(c) ||
+					/^rgba\(\s*255,\s*255,\s*255,\s*1\s*\)$/.test(c);
+				if (!isWhite) {
+					document.documentElement.classList.add('auto-dark');	// 留个标记，方便你按 F12 一眼看到
+					var hint = document.getElementById('autoDarkHint');
+					if (hint) hint.hidden = false;
+				}
+			}, 0);
+		})();
+
 		/* ---------- 深色模式切换（第二步） ----------
 		   分工：<head> 里的脚本负责「进场前先定调」（防闪烁），
 		   这里的脚本负责「进场后的所有互动」：点按钮切换、记小本本、
@@ -644,12 +762,27 @@
 			rootEl.setAttribute('data-theme', t);	// 一行代码换装，剩下的全交给 CSS 变量
 			document.getElementById('themeToggle').textContent = (t === 'dark') ? '◐ 日间' : '◐ 夜间';
 
+			// 换肤时同步更新 color-scheme：手动点到浅色皮肤的那一下，
+			// 必须同时把这句"谢绝自动反色"的声明改回去，
+			// 否则浏览器下次重绘又会热心地替我们翻黑（就是"被深色盖住"那一幕）。
+			var csMeta = document.querySelector('meta[name="color-scheme"]');
+			if (csMeta) csMeta.setAttribute('content', t === 'dark' ? 'only dark' : 'only light');
+
 			// 预览条高亮：在深色模式下，高亮"记着的那套浅色皮肤"，
 			// 这样你一眼就知道点「◐ 日间」会回到哪套配色。
 			var active = (t === 'dark') ? (readLS(SKIN_KEY) || DEFAULT_SKIN) : t;
 			document.querySelectorAll('.skin-pill').forEach(function (btn) {
 				btn.setAttribute('aria-pressed', String(btn.getAttribute('data-skin') === active));
 			});
+
+			// 手机浏览器顶栏跟着换色（不然页面变浅了、顶栏还是黑的，看着像没切干净）。
+			// 直接读 --c-bg 这个变量本身：它不带过渡、改完立刻就是新值，
+			// 而 background-color 那条是有过渡的，读它只会拿到动画中间的颜色。
+			var meta = document.querySelector('meta[name="theme-color"]');
+			if (meta) {
+				var bg = getComputedStyle(rootEl).getPropertyValue('--c-bg').trim();
+				if (bg) meta.setAttribute('content', bg);
+			}
 		}
 
 		// 打开页面时把按钮文字和当前状态对齐（外观本身 head 里已定好）

@@ -15,6 +15,21 @@ const siteData = {
   homeTitle: "小睦巨献",
   pageTitle: "Hello, World!",
 
+  // 顶部问候语：按"现在几点"自动换一句。
+  //   from —— 从几点开始用这一条（含），一直到下一条的 from 之前；
+  //          列表按钟点从小到大写，最后一条自然兜底到 23 点。
+  //   icon —— 前面那个小图标；text —— 主问候；note —— 下面那行小注脚（不想写就留空字符串，整行会自动收起）。
+  // 想换词、换时段、加节日彩蛋，只改这里，不用碰 index.html。
+  greetings: [
+    { from:  0, icon: "🌙", text: "夜深了", note: "怎么还没睡，早点休息吧" },
+    { from:  5, icon: "🌅", text: "早上好", note: "新的一天，慢慢来" },
+    { from:  9, icon: "☀️", text: "上午好", note: "再忙记得喝口水" },
+    { from: 12, icon: "🍵", text: "中午好", note: "记得吃口热乎的" },
+    { from: 14, icon: "🌤", text: "下午好", note: "撑住，快结束了" },
+    { from: 18, icon: "🌆", text: "晚上好", note: "今天过得怎么样" },
+    { from: 22, icon: "🌙", text: "夜深了", note: "忙完就早点休息" }
+  ],
+
   // 顶部导航 + 卡片：顺序就是排列顺序，id 要和下面 cards 对应
   nav: [
     { id: "top",   name: "首页" },

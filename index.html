@@ -304,6 +304,33 @@
 			font-variant-numeric: tabular-nums;	/* 数字等宽，秒数跳动时宽度不抖 */
 		}
 
+		/* 问候语：按"现在几点"换一句人话，给页面添点温度。
+		   文字全部来自 data.js 的 greetings，改词不用碰这里。
+		   结构 = 小图标 + 主问候 + 一行小注脚；注脚为空时整行自动收起。 */
+		#greeting {
+			width: fit-content;
+			margin: 0 auto var(--sp-3);
+			padding: 0 var(--page-pad-x);
+			text-align: center;
+			font-size: var(--fs-lg);
+			color: var(--c-text-strong);
+			letter-spacing: 0.02em;
+			line-height: var(--lh-tight);
+		}
+		#greeting .greet-icon {
+			margin-right: 0.3em;		/* 图标和文字之间留口气 */
+		}
+		#greeting .greet-note {
+			display: block;				/* 小注脚另起一行 */
+			margin-top: var(--sp-1);
+			font-size: var(--fs-sm);
+			color: var(--c-text-muted);
+			letter-spacing: 0.04em;
+		}
+		#greeting .greet-note:empty {
+			display: none;				/* 没写小注脚就整行收起，不留空档 */
+		}
+
 		/* ============================================================
 		   4. 主内容网格
 		   ============================================================ */
@@ -525,6 +552,9 @@
 	</nav>
 
 	<header id="top" class="grad-text">小睦巨献</header>	<!--HTML语义头部标签；渐变字效果来自 .grad-text -->
+	<!--问候语：文字由下面的脚本照着 data.js 的 greetings 按当前钟点填。
+	     这里写的是 data.js 没加载成功时的静态兜底，不要删。 -->
+	<div id="greeting"><span class="greet-icon">🌿</span><span id="greetText">你好，和田</span><span id="greetNote" class="greet-note"></span></div>
 	<div id="clock">时间加载中…</div>	<!--时间就显示在这个盒子里，由下面的JS负责填内容-->
 
 	<main>
@@ -589,7 +619,7 @@
 	     好让 og-image.js（分享缩略图）能把它画进图里。 -->
 	<img class="share-gen" src="favicon.svg" alt="" aria-hidden="true">
 
-	<script src="data.js?v=2"></script>
+	<script src="data.js?v=4"></script>
 	<script>
 		// 这里是 JavaScript 地盘：负责"网页会做什么"
 		// 注释用 // 或 /* */ 都可以
@@ -690,8 +720,35 @@
 				y + '年' + m + '月' + d + '日 ' + week + ' ' + hh + ':' + mm + ':' + ss;
 		}
 
+		/* ---------- 顶部问候语：跟着"现在几点"换一句 ----------
+		   时段表在 data.js 的 greetings 里（换词不用碰这个文件）。
+		   规则：取"from 不大于当前小时"的最后一条，列表按钟点顺序写，末条自然兜底。 */
+		let lastGreet = null;				// 记住上次用的是哪条，避免每秒都去改 DOM
+		function updateGreeting() {
+			if (typeof siteData === 'undefined' || !siteData.greetings) return;	// data.js 没加载成功就保留静态兜底
+
+			const h = new Date().getHours();
+			let pick = siteData.greetings[0];
+			siteData.greetings.forEach(function (g) {
+				if (h >= g.from) pick = g;	// 能匹配上的最后一条，就是当前时段
+			});
+			if (pick === lastGreet) return;	// 时段没变就什么都不用做（整点一到它会自己换）
+			lastGreet = pick;
+
+			const elIcon = document.querySelector('#greeting .greet-icon');
+			const elText = document.getElementById('greetText');
+			const elNote = document.getElementById('greetNote');
+			if (elIcon) elIcon.textContent = pick.icon || '';
+			if (elText) elText.textContent = pick.text || '';
+			if (elNote) elNote.textContent = pick.note || '';	// 留空时 CSS 会把这一行收起来
+		}
+
 		updateClock();						// 打开页面先立刻显示一次，免得有一秒空白
-		setInterval(updateClock, 1000);		// 每1000毫秒（1秒）自动执行一次，时间就"活"了
+		updateGreeting();					// 问候语也先定一次
+		setInterval(function () {			// 每1000毫秒（1秒）自动执行一次，时间就"活"了
+			updateClock();
+			updateGreeting();				// 顺带看一眼是否跨进了新时段
+		}, 1000);
 
 		/* ---------- 页脚「最近更新」：自动读这张网页的修改时间 ----------
 		   document.lastModified 是浏览器从响应头里拿到的"这个文件的最后修改时间"，
@@ -824,8 +881,8 @@
 			if (!('IntersectionObserver' in window)) return;
 
 			var items = [];
-			// 出场顺序：导航整条 → 标题 → 时间 → 每张卡片
-			document.querySelectorAll('header, #clock, h1').forEach(function (el) {
+			// 出场顺序：导航整条 → 标题 → 问候语 → 时间 → 每张卡片
+			document.querySelectorAll('header, #greeting, #clock, h1').forEach(function (el) {
 				items.push(el);
 			});
 			document.querySelectorAll('.col').forEach(function (el) {

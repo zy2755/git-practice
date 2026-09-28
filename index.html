@@ -304,6 +304,53 @@
 			font-variant-numeric: tabular-nums;	/* 数字等宽，秒数跳动时宽度不抖 */
 		}
 
+		/* 天气：靠访问者的 IP 猜出城市，再拉一次实时天气。
+		   和 #clock 一样是个居中胶囊，两者上下叠着，风格统一。
+		   还没拉到数据时整块藏起来（:empty），拉到了再淡入，避免出现空框或"加载中"字样闪一下。 */
+		#weather {
+			width: fit-content;
+			text-align: center;
+			font-size: var(--fs-md);
+			color: var(--c-text-muted);
+			background: var(--c-surface);
+			border: 1px solid var(--c-border);
+			border-radius: var(--radius-pill);
+			box-shadow: 0 1px 2px var(--c-shadow);
+			padding: var(--sp-2) var(--sp-5);
+			margin: 0 auto var(--sp-7);	/* 左右 auto 才能像时间那样居中 */
+			/* 县名可能很长（"阜新蒙古族自治县"），fit-content 会一路撑到整屏宽、
+			   贴着屏幕两边。留出跟页面内容一样宽度的左右边距，最多只到那儿。 */
+			max-width: calc(100% - 2 * var(--page-pad-x));
+			letter-spacing: 0.02em;
+			font-variant-numeric: tabular-nums;	/* 温度数字等宽，刷新时宽度不抖 */
+			animation: wx-in 0.5s ease both;	/* 拿到数据后轻轻淡入，不突兀 */
+		}
+		#weather:empty {
+			display: none;				/* 没数据（或定位失败）就整块收起，不留空胶囊 */
+		}
+		/* 每一段（"多云 26°C"）各自不拆开，要换行就在"·"那里换，看着整齐 */
+		#weather > span {
+			white-space: nowrap;
+		}
+		#weather .wx-icon {
+			margin-right: 0.35em;		/* 图标和文字之间留口气 */
+		}
+		#weather .wx-city {
+			color: var(--c-text-strong);	/* 城市名比气温数字重一点，一眼能扫到 */
+		}
+		#weather .wx-sep {
+			margin: 0 0.5em;
+			opacity: 0.45;				/* 分隔点点淡一点，别抢戏 */
+		}
+		@keyframes wx-in {
+			from { opacity: 0; transform: translateY(4px); }
+			to   { opacity: 1; transform: translateY(0); }
+		}
+		/* 有"减少动态效果"偏好的访客，就别做这个小动画了 */
+		@media (prefers-reduced-motion: reduce) {
+			#weather { animation: none; }
+		}
+
 		/* 问候语：按"现在几点"换一句人话，给页面添点温度。
 		   文字全部来自 data.js 的 greetings，改词不用碰这里。
 		   结构 = 小图标 + 主问候 + 一行小注脚；注脚为空时整行自动收起。 */
@@ -515,6 +562,17 @@
 				--page-pad-x: 16px;
 				--gap-grid: 16px;
 			}
+			/* 天气胶囊在手机上更紧凑一点：字号小一号、分隔点靠拢、字距收紧。
+			   这样常规的"市+县"（连云港灌南 · 多云 26°C · 21~27°C · 体感 29°C）
+			   才能挤在一行里；不然会折成两行、还撑满整屏。 */
+			#weather {
+				font-size: 0.85rem;
+				padding: var(--sp-2) var(--sp-3);
+				letter-spacing: 0;
+			}
+			#weather .wx-sep {
+				margin: 0 0.2em;
+			}
 			.col {
 				padding: var(--sp-5);
 				border-radius: var(--radius-md);	/* 小屏上圆角小一点更协调 */
@@ -556,6 +614,9 @@
 	     这里写的是 data.js 没加载成功时的静态兜底，不要删。 -->
 	<div id="greeting"><span class="greet-icon">🌿</span><span id="greetText">你好，和田</span><span id="greetNote" class="greet-note"></span></div>
 	<div id="clock">时间加载中…</div>	<!--时间就显示在这个盒子里，由下面的JS负责填内容-->
+	<!--天气：内容由下面的脚本按"访问者的IP→城市→实时天气"填进来。
+	     这里故意留空——没拉到数据时 CSS 会把整个胶囊藏起来，不会露出空框。 -->
+	<div id="weather"></div>
 
 	<main>
 		<h1 class="grad-text">Hello, World!</h1>
@@ -619,7 +680,7 @@
 	     好让 og-image.js（分享缩略图）能把它画进图里。 -->
 	<img class="share-gen" src="favicon.svg" alt="" aria-hidden="true">
 
-	<script src="data.js?v=4"></script>
+	<script src="data.js?v=6"></script>
 	<script>
 		// 这里是 JavaScript 地盘：负责"网页会做什么"
 		// 注释用 // 或 /* */ 都可以
@@ -749,6 +810,248 @@
 			updateClock();
 			updateGreeting();				// 顺带看一眼是否跨进了新时段
 		}, 1000);
+
+		/* ---------- 天气：按访问者的 IP 猜城市，再拉实时天气 ----------
+		   两步走，两步各有备用：
+		     ① 定位：`api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh`
+		        —— 不带坐标时它就按访问者的 IP 判断，一次给出**中文城市名 + 经纬度**；
+		        备用 `get.geojs.io/v1/ip/geo.json`（只保证给经纬度）。
+		     ② 天气：`api.open-meteo.com/v1/forecast`，用经纬度查，不需要申请密钥。
+		   为什么不用更省事的接口？网页有两条硬规矩，很多免费接口都栽在这：
+		     · 站点是 https，就不能再调 http 接口（会被浏览器直接拦），所以 ip-api 用不了；
+		     · 接口必须明确允许跨域（Access-Control-Allow-Origin）。
+		       太平洋电脑网那个返回中文但不允许跨域；ipapi.co 实测也不给这个头，被 CORS 拦掉。
+		     · 还有个更隐蔽的坑：ipwho.is 跨域没问题，但免费额度用超会返回 429，
+		       而且响应体里没有经纬度（看着像成功、其实是个空壳）——踩过，已整个换掉。
+		   整个流程不弹窗、不报错——任一步失败就安安静静不显示，
+		   宁可这块不出现，也不让访客看到一行红字或空框。
+		   想换接口、调缓存策略，改下面这几个常量就行。 */
+
+		(function initWeather() {
+			var box = document.getElementById('weather');
+			if (!box) return;							// 页面上没这个盒子就什么都不做
+
+			// 缓存策略：**缓存只用来"让页面立刻有内容"，不用来"省掉这次请求"**。
+			//   刚拉过不到 FRESH_MS（2 分钟）→ 直接用缓存，不再请求（避免手抖连点刷新时反复打接口）；
+			//   超过 2 分钟 → 先把缓存贴上垫底，同时**照样去拉最新**，拉回来覆盖。
+			// 为什么不用"30 分钟内不请求"那种省事写法：万一缓存里存的是错的城市
+			//   （换了网络、或第一次打开时正挂着代理），只靠缓存会一直显示那个错的，没法自愈。
+			var FRESH_MS = 2 * 60 * 1000;				// 2 分钟内算"很新"，直接用
+			// 缓存键带版本号：以后万一改了数据结构，把它后面的数字加一，
+			// 旧访客浏览器里的老格式缓存就自动作废，不会拿旧数据当新数据用。
+			var CACHE_KEY = 'wxCacheV2';
+
+			// WMO 天气代码 → 中文天气名 + 一个 emoji。
+			// 代码表出自 open-meteo 官方文档，按区间归类，不用一条条穷举。
+			function describeWeather(code) {
+				if (code === 0)                    return { icon: '☀️',  text: '晴' };
+				if (code === 1)                    return { icon: '🌤',  text: '晴间多云' };
+				if (code === 2)                    return { icon: '⛅',  text: '多云' };
+				if (code === 3)                    return { icon: '☁️',  text: '阴' };
+				if (code === 45 || code === 48)    return { icon: '🌫',  text: '雾' };
+				if (code >= 51 && code <= 57)      return { icon: '🌦',  text: '毛毛雨' };
+				if (code >= 61 && code <= 67)      return { icon: '🌧',  text: '雨' };
+				if (code >= 71 && code <= 77)      return { icon: '❄️',  text: '雪' };
+				if (code >= 80 && code <= 82)      return { icon: '🌧',  text: '阵雨' };
+				if (code >= 85 && code <= 86)      return { icon: '🌨',  text: '阵雪' };
+				if (code >= 95 && code <= 99)      return { icon: '⛈',  text: '雷阵雨' };
+				return { icon: '🌡', text: '天气' };		// 没见过的代码也别留白
+			}
+
+			// 取一个带超时的 JSON：接口半天不回就别干等，直接算失败
+			function getJSON(url, timeoutMs) {
+				return new Promise(function (resolve, reject) {
+					var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+					var timer = setTimeout(function () {
+						if (ctl) ctl.abort();
+						reject(new Error('timeout'));
+					}, timeoutMs || 6000);
+					fetch(url, ctl ? { signal: ctl.signal } : undefined)
+						.then(function (r) { return r.json(); })
+						.then(function (data) { clearTimeout(timer); resolve(data); })
+						.catch(function (err) { clearTimeout(timer); reject(err); });
+				});
+			}
+
+			// ① 定位 + 译名一步到位。
+			//    BigDataCloud 这个接口不带坐标时，就是按访问者的 IP 自己判断，
+			//    一次返回两级中文地名（"连云港市" + "灌南縣"）+ 经纬度，
+			//    等于把"拿坐标"和"译中文名"两步合成一步，也少打一个接口。
+			//    ⚠️ 校验必须抠到经纬度本身是有效数字：免费接口限流时（HTTP 429）
+			//    会返回一个没有经纬度的空壳，只看有没有返回就往下走会拿到 undefined，
+			//    最后整块天气不显示，而且因为设计成"失败静默隐藏"，页面零报错、极难查。
+			function locate() {
+				return getJSON('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=zh', 6000)
+					.then(function (g) {
+						var lat = Number(g && g.latitude), lon = Number(g && g.longitude);
+						if (!isFinite(lat) || !isFinite(lon)) throw new Error('定位字段不全');
+						return { city: composeCityName(g), lat: lat, lon: lon };
+					})
+					.catch(fromGeojs);		// 主接口不行就换一家
+			}
+
+			// 备用定位：geojs.io。只保证拿到经纬度（地名常常是空的，那就只显示天气不显示地名，
+			// 页面上本来也做了"没地名就不显示"的处理）。
+			function fromGeojs() {
+				return getJSON('https://get.geojs.io/v1/ip/geo.json', 6000).then(function (d) {
+					var lat = Number(d && d.latitude), lon = Number(d && d.longitude);
+					if (!isFinite(lat) || !isFinite(lon)) throw new Error('备用定位也失败');
+					return { city: cleanAdminName(d.city || ''), lat: lat, lon: lon };
+				});
+			}
+
+			// 地名清洗：削掉"市/县/区"这类行政后缀、繁体转简体，念着才自然。
+			// 这个接口对部分地方会返回繁体（"濟南市""灌南縣"），所以要先转一道。
+			var TRAD_TO_SIMP = {
+				'濟': '济', '東': '东', '臺': '台', '灣': '湾', '廣': '广', '門': '门',
+				'寧': '宁', '廈': '厦', '蘇': '苏', '遼': '辽', '貴': '贵', '雲': '云',
+				'龍': '龙', '陽': '阳', '陰': '阴', '華': '华', '國': '国', '興': '兴',
+				'義': '义', '濱': '滨', '縣': '县', '區': '区', '頭': '头', '島': '岛',
+				'豐': '丰', '澤': '泽', '蘭': '兰', '鹽': '盐', '錦': '锦', '營': '营',
+				'莊': '庄', '驛': '驿', '淵': '渊', '瀋': '沈', '內': '内', '壩': '坝',
+				'崗': '岗', '舖': '铺', '橋': '桥', '鎮': '镇', '鄉': '乡',
+				'瀘': '泸', '灤': '滦', '潯': '浔', '濰': '潍', '蕪': '芜', '蘆': '芦',
+				'紅': '红', '綠': '绿', '藍': '蓝', '銅': '铜', '鐵': '铁', '長': '长',
+				'馬': '马', '鳥': '鸟', '魚': '鱼', '魯': '鲁', '齊': '齐',
+				'開': '开', '關': '关', '陝': '陕', '慶': '庆', '愛': '爱',
+				// 地名里高频、但上面没覆盖到的：黄浦的"黃"、滩涂的"灘"、山岭的"嶺"……
+				'黃': '黄', '灘': '滩', '濛': '蒙', '澗': '涧', '瀟': '潇', '巖': '岩',
+				'嶽': '岳', '塢': '坞', '嶼': '屿', '嶺': '岭', '陸': '陆', '陘': '陉',
+				'隴': '陇', '潿': '涠', '灄': '滠', '灃': '沣', '澮': '浍', '瀦': '潴',
+				'蓀': '荪', '鶯': '莺', '鷗': '鸥', '鴉': '鸦', '鶴': '鹤', '鷹': '鹰',
+				'蔥': '葱', '藹': '蔼', '蘞': '蔹', '蘊': '蕴', '蕒': '荬'
+			};
+			function toSimplified(s) {
+				return String(s).replace(/[\u4e00-\u9fff]/g, function (ch) {
+					return TRAD_TO_SIMP[ch] || ch;
+				});
+			}
+			function cleanAdminName(s) {
+				var t = toSimplified(s || '').trim();
+				if (!t) return '';
+				// "自治县 / 自治州 / 自治旗 / 自治区"是地名本身的一部分，削掉会变得不通顺
+				// （"阜新蒙古族自治县" → "阜新蒙古族"），所以整名保留
+				if (/自治[县州旗区]$/.test(t)) return t;
+				// "XX新区 / XX开发区 / XX林区"这类整体后缀，削掉，"浦东新区"→"浦东"
+				t = t.replace(/(新区|开发区|经济开发区|高新区|管理区|林区|矿区|特区)$/, '');
+				// 普通行政后缀，"连云港市"→"连云港"、"灌南县"→"灌南"、"滨城区"→"滨城"
+				return t.replace(/[市县区旗盟]$/, '');
+			}
+
+			// 拼一个"市 + 县/区"的地名，效果跟 QQ 天气那个"连云港灌南"一样。
+			// 该有的情况都兜住了：
+			//   连云港市 + 灌南縣   → 连云港灌南
+			//   济南市   + 章丘区   → 济南章丘
+			//   北京市   + 东城区   → 北京东城
+			//   阜新市   + 阜新蒙古族自治县 → 阜新蒙古族自治县（县名已含市名，不再重复前缀）
+			//   只有一级地名           → 就显示那一级
+			function composeCityName(g) {
+				var city = cleanAdminName(g && g.city);
+				var loc  = cleanAdminName(g && g.locality);
+				if (!loc) return city;
+				if (!city) return loc;
+				if (loc === city) return city;					// 两级一样，只留一个
+				if (loc.indexOf(city) === 0) return loc;		// 县名里已经带了市名
+				if (city.indexOf(loc) === 0) return city;
+				return city + loc;								// 跟 QQ 一样直接连写
+			}
+
+			// ③ 天气：拿经纬度问 open-meteo
+			function fetchWeather(lat, lon) {
+				var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat +
+					'&longitude=' + lon +
+					'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code' +
+					'&daily=temperature_2m_max,temperature_2m_min' +
+					'&timezone=auto&forecast_days=1';
+				return getJSON(url, 7000).then(function (w) {
+					var cur = w && w.current;
+					if (!cur) throw new Error('天气数据为空');
+					return {
+						temp: Math.round(cur.temperature_2m),			// 当前气温
+						feels: Math.round(cur.apparent_temperature),	// 体感
+						humidity: Math.round(cur.relative_humidity_2m),	// 湿度
+						code: cur.weather_code,							// 天气代码，交给 describeWeather 翻译
+						high: w.daily && w.daily.temperature_2m_max ? Math.round(w.daily.temperature_2m_max[0]) : null,
+						low: w.daily && w.daily.temperature_2m_min ? Math.round(w.daily.temperature_2m_min[0]) : null
+					};
+				});
+			}
+
+			// 把上面拿到的数据画成一句话，塞进胶囊里
+			function render(city, d) {
+				var w = describeWeather(d.code);
+				box.textContent = '';							// 先清空，避免重复渲染叠字
+				function span(cls, txt) {
+					var s = document.createElement('span');
+					if (cls) s.className = cls;
+					s.textContent = txt;
+					box.appendChild(s);
+				}
+				span('wx-icon', w.icon + ' ');
+				if (city) {										// 拿到城市名才显示，没拿到不硬凑
+					span('wx-city', city);
+					span('wx-sep', '·');
+				}
+				span('', w.text + ' ' + d.temp + '°C');
+				// 最高最低温：有就顺带说一句，没有（接口没给）就不显示
+				if (d.high != null && d.low != null) {
+					span('wx-sep', '·');
+					span('', d.low + '~' + d.high + '°C');
+				}
+				// 体感差得多（≥3 度）才提一句，免得平时啰嗦
+				if (d.feels != null && Math.abs(d.feels - d.temp) >= 3) {
+					span('wx-sep', '·');
+					span('', '体感 ' + d.feels + '°C');
+				}
+			}
+
+			// 拉一轮完整数据（定位 → 天气），成功返回 {city, data}，失败抛错
+			function fetchOnce() {
+				return locate().then(function (p) {
+					return fetchWeather(p.lat, p.lon).then(function (data) {
+						return { city: p.city, data: data };
+					});
+				});
+			}
+
+			// 读一眼缓存。返回值：
+			//   'fresh' —— 2 分钟内的，直接用，这次就不请求了
+			//   'shown' —— 老的，已贴上去垫底，还得去拉最新
+			//   'none'  —— 没缓存或坏了
+			function showCache() {
+				try {
+					var raw = localStorage.getItem(CACHE_KEY);
+					if (!raw) return 'none';
+					var cached = JSON.parse(raw);
+					if (!cached || !cached.data || typeof cached.data.temp !== 'number') return 'none';
+					render(cached.city, cached.data);		// 先贴上去，页面立刻有内容
+					if (cached.at && (Date.now() - cached.at) < FRESH_MS) return 'fresh';
+					return 'shown';
+				} catch (e) { return 'none'; }				// 缓存坏了无所谓，正常往下走
+			}
+
+			// 免费接口偶尔会抽风（返回残缺数据或超时），所以失败后隔几秒再试，
+			// 最多试 RETRY_MAX 次——访客多等一会儿就能看到，好过一直空着。
+			var RETRY_MAX = 3;
+			var RETRY_DELAY = 4000;						// 每次重试间隔 4 秒
+
+			function attempt(n) {
+				fetchOnce()
+					.then(function (r) {
+						render(r.city, r.data);
+						try {
+							localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), city: r.city, data: r.data }));
+						} catch (e) { /* 存不下就算了，不影响显示 */ }
+					})
+					.catch(function () {
+						if (n < RETRY_MAX) setTimeout(function () { attempt(n + 1); }, RETRY_DELAY);
+						// 试满还是失败就安静放弃：宁可不显示，也不弹红字打扰访客
+					});
+			}
+			// 开跑：先看缓存，很新的就直接用、不再请求；否则贴上来垫底、同时去拉最新。
+			var cacheState = showCache();
+			if (cacheState !== 'fresh') attempt(1);
+		})();
 
 		/* ---------- 页脚「最近更新」：自动读这张网页的修改时间 ----------
 		   document.lastModified 是浏览器从响应头里拿到的"这个文件的最后修改时间"，
@@ -882,6 +1185,9 @@
 
 			var items = [];
 			// 出场顺序：导航整条 → 标题 → 问候语 → 时间 → 每张卡片
+			// 注意 weather 不在这里：它是异步拉来的，出场时可能还没数据，
+			// 早挂 .reveal 会让它一直保持"透明的待出场态"，等数据到了又看不见。
+			// 所以天气自己有一套淡入（见 #weather 的 wx-in 动画），各走各的。
 			document.querySelectorAll('header, #greeting, #clock, h1').forEach(function (el) {
 				items.push(el);
 			});

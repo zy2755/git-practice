@@ -57,7 +57,8 @@ const siteData = {
       items: [
         { text: "这里是", link: "https://platform.deepseek.com/usage", linkText: "DeepSeek开放平台" },
         { text: "这里是", link: "https://console.volcengine.com/ark/region:cn-beijing/subscription/coding-plan", linkText: "火山方舟" },
-        { text: "这里是", link: "https://console.bce.baidu.com/ai-engine/speech/overview/index", linkText: "百度智能云" }
+        { text: "这里是", link: "https://console.bce.baidu.com/ai-engine/speech/overview/index", linkText: "百度智能云" },
+        { text: "这里是", link: "https://home.console.aliyun.com/home/dashboard/ProductAndService?spm=5176.28507329.J_4VYgf18xNlTAyFFbOuOQe.d_quick_access_5.16b08bb2xxt7Jf", linkText: "阿里云百炼" }
       ]
     },
     {

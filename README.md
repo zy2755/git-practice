@@ -2,7 +2,8 @@
 
 这里放的是个人主页「小睦聚合」的源码。
 
-- 线上地址：https://xiaomu-home-97792.app.workbuddy.host/
+- 线上地址：https://xiaomu-home-97792.app.workbuddy.host/?sharecode=A5CJKJ56T5
+  —— **必须带 `?sharecode=A5CJKJ56T5` 这一段**，去掉就返回 403「链接不完整」（2026-11-13 平台升级后改的规则）
 - 本地预览：直接双击 `index.html`
 - 文件分工：
   - `index.html` —— 页面结构 + 局部样式 + 时间/主题/入场动画脚本
@@ -20,6 +21,28 @@
 
 > 约定：每次改动都在这里记一笔，写清「时间 · 改了什么 · 为什么」。
 > 最新的写在最上面。
+
+### 2026-11-13 21:35 — 平台升级后重新发布（链接带上了 sharecode）
+
+**背景：** WorkBuddy 官方通知「10 月 20 日之前发布的应用当前可能已无法访问，需手动重新发布」。
+实测旧地址 `https://xiaomu-home-97792.app.workbuddy.host/` 返回 **HTTP 403 +「链接不完整」**，确认中招。
+
+**做了什么：**
+
+1. 用原 appId `wbapp_CmfttXSYgR2r7jXyqNqGhT` 从本目录重新发布（是同一个应用，不是新建），
+   **代码一个字没改**，纯粹是被平台升级牵连。
+2. 拿到新分享链接：`https://xiaomu-home-97792.app.workbuddy.host/?sharecode=A5CJKJ56T5`
+3. 本 README 里 3 处旧地址全部同步更新（文首「线上地址」、10-15 那条的「发布」、09-17 那条加补注）。
+
+**关键（别再踩）：** 新链接**必须带 `?sharecode=A5CJKJ56T5`**。
+域名仍是 `xiaomu-home-97792`，但去掉 sharecode 访问依旧是 403。
+以后分享给别人、写进文档、喂给别的服务，都要用完整地址；只写域名等于写了个死链。
+
+**验证：** 新链接实测 `HTTP 200`，返回首页 57,670 字节，`<title>小睦聚合</title>`；无 sharecode 的旧地址仍 403。
+
+**顺带记一笔：** 通知只说"会生成新链接、旧链接不恢复"，没说新链接会长这样。
+以后收到类似通知，除了重发，记得**重发后立刻实测一遍并把新地址同步到所有引用处**。
+
 
 ### 2026-10-26 13:41 — 仪表盘加「小米 MiMo」「讯飞星辰」；咕咕番换域名；动漫卡补一句广告插件提醒
 
@@ -55,7 +78,7 @@
 都必须把引用处的 `?v=N` 加一**，让 URL 变成一个全新的 key 来绕过浏览器缓存。
 （以前这条规矩只写在 `theme.css` 上，现在明确：`data.js` 同样适用。）
 
-**发布：** https://xiaomu-home-97792.app.workbuddy.host/（链接不变，覆盖发布）
+**发布：** https://xiaomu-home-97792.app.workbuddy.host/?sharecode=A5CJKJ56T5（覆盖发布、不动本地文件；但注意 2026-11-13 平台升级后分享链接带上了 `sharecode` 参数，这一条里的"链接不变"已不成立，详见更新记录最新一条）
 
 **怎么验证的：**
 1. 线上 `/index.html` 与本地逐字节一致（sha256 `2f6385f8…`）—— 确认第一次发布的内容是对的；
@@ -369,6 +392,7 @@
 - `index.html`：`<head>` 加防闪烁脚本（首帧前定好 `data-theme`）、导航右侧加「◐ 夜间 / 日间」切换按钮、底部脚本负责切换与记忆（默认跟随系统 `prefers-color-scheme`）。
 - 新增夜空壁纸 `bg-pc-dark.svg`、`bg-mobile-dark.svg`。
 - 顺带换域名重新发布：appId `wbapp_CmfttXSYgR2r7jXyqNqGhT`，新链接 https://xiaomu-home-97792.app.workbuddy.host/ ，旧链接（xiaomu-hub）已失效。
+  - ⚠️ 补注（2026-11-13）：上面这个地址已随平台升级失效，现行地址见文首「线上地址」。
 
 ### 2026-09-16 — 仓库起步
 

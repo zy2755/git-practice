@@ -265,7 +265,6 @@ const siteData = siteResultOf({
       id: "notes",
       title: "一些碎碎念",
       notes: [
-        "这是由我编辑的网页，我只有两岁",
         "请尽情挥洒您的创意！",
         "不知道是不是“芜湖起飞”的原因，不让代理"
       ]

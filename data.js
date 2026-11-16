@@ -227,11 +227,10 @@ const siteData = siteResultOf({
       id: "links",
       title: "一些小链接",
       items: [
-        { text: "欢迎参观", link: "https://space.bilibili.com/454697722?spm_id_from=333.1007.0.0", linkText: "小睦的B站首页" },
+        { text: "欢迎参观", link: "https://github.com/zy2755", linkText: "我的GitHub首页" },
         { text: "这里是国内可用的", link: "https://fankuhub.com/", linkText: "动漫查询库" },
         { text: "看看", link: "https://mirrorchyan.com/zh/get-start", linkText: "Mirror酱" },
-        { text: "我不要", link: "https://www.autohanding.com/", linkText: "手抄作业" },
-        { text: "点击打开", link: "https://space.bilibili.com/67079745?spm_id_from=333.337.0.0", linkText: "玄离199的主页" }
+        { text: "我不要", link: "https://www.autohanding.com/", linkText: "手抄作业" }
       ]
     },
     {
